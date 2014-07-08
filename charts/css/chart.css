@@ -1,0 +1,76 @@
+/* Style matching the IAU constellation maps. */
+.overlay { 
+}
+
+/* The basic field on which we are drawing. A sterographic globe. */
+.globe {
+    fill: white;
+    stroke-width: 0.25;
+    stroke: rgb(35, 31, 32);
+}
+
+/* The longitude/latitude lines on our globe. */
+.graticule {
+    fill: none;
+    stroke: #0053ad;
+    stroke-width: 0.25;
+    stroke: rgb(35, 31, 32);
+}
+
+/* The base style of a star. Size of the star on the chart is dependent
+ * on its magnitude */
+.star {
+  fill: black;
+  fill-opacity: 0.9;
+}
+
+/* The base style for a galaxy. This appears as a red ellipse with a
+ * thin black border that is sized and oriented base on the object's
+ * size and orientation */
+.galaxy {
+  fill: rgb(236, 28, 36); 
+  fill-opacity: 0.9;
+  stroke-width: 0.32; 
+  stroke: rgb(35,31,32);
+}
+
+/* The base style for an open cluster. This appears as a yellow circle
+ * with a dashed black border. */
+.open-cluster {
+    fill: rgb(255, 242, 0); 
+    stroke-width: 0.8; 
+    stroke-linecap: round;
+    stroke: rgb(35, 31, 32); 
+    stroke-opacity: 1; 
+    stroke-dasharray: 0, 2.5;
+}
+
+/* The base style for a globular cluster. This appears as a yellow
+ * square with a thin black border. */
+.globular-cluster circle {
+    fill: rgb(255, 242, 0); 
+    stroke-width: 0.32; 
+    stroke: rgb(35,31,32);,
+}
+.globular-cluster path {
+    stroke-width: 0.32; 
+    stroke: rgb(35, 31, 32);
+}
+
+/* The base style for a planetary nebula. This appears as a green circle
+ * with a thin black border with a horizontal and vertical line through
+ * it. */
+.planetary-nebula {
+    fill: rgb(128, 204, 40); 
+    stroke-width: 0.32; 
+    stroke: rgb(35, 31, 32);,
+}
+
+/* The base style for a bright nebula. This appears as a green
+ * square with a thin black border. */
+.bright-nebula {
+    fill: rgb(128, 204, 40); 
+    stroke-width: 0.32; 
+    stroke: rgb(35, 31, 32);
+}
+
