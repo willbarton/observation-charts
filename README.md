@@ -13,3 +13,5 @@ License
 -------
 
 BSD. See [LICENSE file](LICENSE).
+
+Individual catalogs may have their own license.
