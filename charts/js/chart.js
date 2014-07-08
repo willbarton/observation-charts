@@ -75,8 +75,6 @@
                     base.options.center.ra * 15, 
                     -1 * base.options.center.dec]);
 
-            console.log(base.projection);
-            
             // Create and configure the geographic path generator
             base.path = d3.geo.path().projection(base.projection);
             
@@ -110,7 +108,7 @@
             d3.json('objects.json', base.drawObjects);
 
             // Load the constellation catalog
-            // d3.json('stars.json', base.drawObjects);
+            // d3.json('consts.json', base.drawObjects);
 
             // Drag Behavior
             // -------------
@@ -146,7 +144,6 @@
                 .domain(d3.extent(stars, function(d) { 
                     return d.properties.magnitude; }))
                 .range(base.options.stars.scale);
-            console.log(rScale.domain());
 
             // Stars
             // -----
@@ -173,16 +170,20 @@
                 });
                 */
 
+            // Draw star labels
             base.label_group.selectAll('text.star-label').data(stars)
                 .enter().append('text')
                 .attr("class", "star-label")
-                .attr("transform", function(d) { 
-                    return "translate(" + projection(d.geometry.coordinates) + ")"; })
-                .attr("x", function(d) { return d.geometry.coordinates[0] > -1 ? 6 : -6; })
                 .style("text-anchor", function(d) { return d.geometry.coordinates[0] > -1 ? "start" : "end"; })
+
+                .attr("transform", function(d) { 
+                    return "translate(" + base.projection(d.geometry.coordinates) + ")"; })
+                .attr("x", function(d) { return d.geometry.coordinates[0] > -1 ? 6 : -6; })
                 .attr("dy", ".35em")
                 .text(function(d) { 
-                    return labels[d.properties.id] ? labels[d.properties.id].name : 
+                    console.log(base.options.labels[d.properties.id]);
+                    return base.options.labels[d.properties.id] ? 
+                            base.options.labels[d.properties.id].name : 
                             (d.properties.name ? d.properties.name : ''); 
                 });
                 
@@ -239,7 +240,6 @@
                     var transform = 'rotate(' + d.properties.angle + ',' + 
                             base.projection(d.geometry.coordinates)[0] + ',' + 
                             base.projection(d.geometry.coordinates)[1] + ')';
-                    console.log(transform);
                     return transform;
                 });
 
@@ -307,7 +307,6 @@
                             d.geometry ? base.projection(d.geometry.coordinates)[0] : 0,
                             d.geometry ? base.projection(d.geometry.coordinates)[1] : 0
                         ];
-                        console.log("globular cluster", coords, d.properties.size[0]);
                         var line = lineFunction([
                                 [coords[0]-globularClusterMagnitudeScale(
                                     d.properties.magnitude),
@@ -370,7 +369,6 @@
                             d.geometry ? base.projection(d.geometry.coordinates)[0] : 0,
                             d.geometry ? base.projection(d.geometry.coordinates)[1] : 0
                         ];
-                        console.log("globular cluster", coords, d.properties.size[0]);
                         var line = lineFunction([
                                 [coords[0]-planetaryNebulaMagnitudeScale(
                                     d.properties.magnitude),
