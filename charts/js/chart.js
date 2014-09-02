@@ -25,7 +25,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * This is based on this Gist: https://gist.github.com/pnavarrc/9730300
+ * This is loosely based on this Gist: https://gist.github.com/pnavarrc/9730300
  */ 
 
 (function($){
@@ -87,9 +87,7 @@
 
             // Center the projection
             // Assume that RA is in hours (decimal) and dec is in degrees.
-            base.projection.rotate([
-                    base.options.center.ra * 15, 
-                    -1 * base.options.center.dec]);
+            base.projection.rotate(base.center());
 
             // Create and configure the geographic path generator
             base.path = d3.geo.path().projection(base.projection);
@@ -112,10 +110,12 @@
             base.graticule = d3.geo.graticule();
 
             // Draw graticule lines
-            base.lines_group.selectAll('path.graticule').data([base.graticule()])
-                .enter().append('path')
-                .attr('class', 'graticule')
-                .attr('d', base.path);
+            if (base.options.graticule) {
+                base.lines_group.selectAll('path.graticule').data([base.graticule()])
+                    .enter().append('path')
+                    .attr('class', 'graticule')
+                    .attr('d', base.path);
+            }
                 
             // Load the star catalog
             d3.json('stars.json', base.drawStars);
@@ -126,6 +126,24 @@
             // Load the constellation catalog
             // d3.json('consts.json', base.drawObjects);
 
+            // Relax our labels
+            base.utils.relax();
+
+        };
+
+        // Center the projection based on our configuration. Either it's
+        // based on the observer's location and date/time, or it is the
+        // configured center;
+        base.center = function() {
+            if(!base.options.center) {
+                var date = base.options.datetime;
+                var location = base.options.location;
+                var dec = -1 * location.latitude;
+                var ra = base.utils.localSiderealTime() * 15;
+
+                return [ra, dec];
+            }
+            return [base.options.center.ra * 15, -1 * base.options.center.dec];
         };
 
         base.drawStars = function(error, data) {
@@ -158,11 +176,15 @@
             // Draw star labels
             base.label_group.selectAll('text.star-label').data(stars)
                 .enter().append('text')
-                .filter(function(d) { return base.path(d) != undefined; })
+                .filter(function(d) { 
+                    var path_defined = base.path(d) != undefined;
+                    var name_defined = base.options.labels[d.properties.id] != undefined;
+                    return path_defined && name_defined;
+                })
                 .attr("class", "star-label")
                 .style("text-anchor", "middle")
                 .attr("transform", function(d) { return "translate(" + base.path.centroid(d) + ")"; })
-                .attr("dy", function(d) { return rScale(d.properties.magnitude); })
+                .attr("dy", function(d) { return rScale(d.properties.magnitude) * 2; })
                 .text(function(d) { 
                     return base.options.labels[d.properties.id] ? 
                             base.options.labels[d.properties.id].name : 
@@ -413,6 +435,94 @@
         };
         
 
+        // Utility functions 
+        // ----
+        base.utils = {};
+
+        // Constraint relaxation for labels
+        base.utils.alpha = 0.5;
+        base.utils.spacing = 12;
+
+        base.utils.relax = function() {
+            again = false;
+            textLabels = base.label_group.selectAll('text');
+
+            textLabels.each(function (d, i) {
+                a = this;
+                da = d3.select(a);
+                y1 = da.attr("y");
+                textLabels.each(function (d, j) {
+                    b = this;
+                    // a & b are the same element and don't collide.
+                    if (a == b) return;
+                    db = d3.select(b);
+                    // a & b are on opposite sides of the chart and
+                    // don't collide
+                    if (da.attr("text-anchor") != db.attr("text-anchor")) return;
+                    // Now let's calculate the distance between
+                    // these elements. 
+                    y2 = db.attr("y");
+                    deltaY = y1 - y2;
+
+                    // If spacing is greater than our specified spacing,
+                    // they don't collide.
+                    if (Math.abs(deltaY) > base.utils.spacing) return;
+
+                    // If the labels collide, we'll push each 
+                    // of the two labels up and down a little bit.
+                    again = true;
+                    sign = deltaY > 0 ? 1 : -1;
+                    adjust = sign * base.utils.alpha;
+                    da.attr("y",+y1 + adjust);
+                    db.attr("y",+y2 - adjust);
+                });
+            });
+
+            // Adjust our line leaders here
+            // so that they follow the labels. 
+            if(again) {
+                setTimeout(relax,20)
+            }
+        };
+        
+        // Julian Day
+        base.utils.julianDay = function(date) {
+            if(!date) date = base.options.datetime;
+            return ( date.getTime() / 86400000.0 ) + 2440587.5;
+        };
+
+        
+        // Greenwich Mean Sidereal Time, based on http://aa.usno.navy.mil/faq/docs/GAST.php
+        // and http://community.dur.ac.uk/john.lucey/users/lst.html
+        base.utils.greenwichMeanSiderealTime = function(date) {
+            if(!date) date = base.options.datetime;
+
+            var JD = base.utils.julianDay(date);
+            var MJD = JD - 2400000.5;		
+            var MJD0 = Math.floor(MJD);
+            var UT = (MJD - MJD0)*24.0;		
+            var T = (MJD0-51544.5)/36525.0;			
+            var GMST = 6.697374558 + 1.0027379093 * UT + (8640184.812866 + (0.093104 - 0.0000062*T)*T)*T/3600.0;		
+            return GMST;
+
+        };
+
+        // Local Sidereal Time, based on http://aa.usno.navy.mil/faq/docs/GAST.php
+        // and http://community.dur.ac.uk/john.lucey/users/lst.html
+        base.utils.localSiderealTime = function(date, lon) {
+            if(!date) date = base.options.datetime;
+            if(!lon) lon = base.options.location.longitude;
+
+            function frac(x) {
+                x -= Math.floor(x);
+                return x < 0 ? x + 1.0 : x;
+            };
+
+            var GMST = base.utils.greenwichMeanSiderealTime(date);
+            var LMST =  24.0*frac((GMST + lon/15.0)/24.0);
+            return LMST;
+        };
+        
         // Run initializer
         base.init();
     };
@@ -429,14 +539,28 @@
         // is visible within the chart's viewport (`size`).
         scale: 0.5, 
 
+        graticule: true,
+
+        // The date to be charted. Defaults to 'now'.
+        datetime: new Date(),
+
+        // The location from which the sky is observered
+        location: {
+            latitude: 40,
+            longitude: -73.883611,
+        },
+            
+        // OR
+
         // The positioning of the chart. If the chart's scale is such
         // that you can see the entire sphere, this will effect its
         // rotation.
         // RA is presumed in decimal hours, dec in degrees.
-        center: {
-            ra: 0.5,
-            dec: 60.5 
-        },
+        // center: {
+        //    ra: 0.5,
+        //    dec: 60.5 
+        // },
+        center: undefined,
 
         stars: {
             magnitude: 5,

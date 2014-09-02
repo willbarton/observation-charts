@@ -12,9 +12,8 @@
 /* The longitude/latitude lines on our globe. */
 .graticule {
     fill: none;
-    stroke: #0053ad;
     stroke-width: 0.25;
-    stroke: rgb(35, 31, 32);
+    stroke: rgba(35, 31, 32, 0.25);
 }
 
 /* The base style of a star. Size of the star on the chart is dependent
