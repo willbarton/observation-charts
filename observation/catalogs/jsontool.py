@@ -27,9 +27,63 @@
 # 
 
 import argparse
-from objects import NGCCatalog, HYGStarCatalog
+from objects import OBJECT_TYPES, CelestialObject, NGCCatalog, HYGStarCatalog
 from constellations import ConstellationCatalog
+
 import json
+
+class CelestialObjectEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, CelestialObject):
+            # Custom JSON format
+            o = {
+                    "id": o.id,
+                    "magnitude": o.magnitude,
+                    "type": OBJECT_TYPES[o.type],
+                    "coordinates": [
+                            o.ra.degrees if not self.args.invert_ra else 360 - o.ra.degrees, 
+                            o.dec.degrees
+                        ],
+                    "size": [o.size.major, o.size.minor] \
+                            if o.size is not None else [],
+                    "angle": o.angle if o.angle is not None else 0,
+                }
+
+            return o
+
+        return json.JSONEncoder.default(self, o)
+
+
+    
+class CelestialObjectGeoJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, CelestialObject):
+            # GEOJSON feature
+            feature = {
+                    "type": "Feature", 
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                                o.ra.degrees if not self.args.invert_ra else 360 - o.ra.degrees, 
+                                o.dec.degrees
+                            ],
+                    },
+                    "properties": {
+                        "id": o.id,
+                        "magnitude": o.magnitude,
+                        "type": OBJECT_TYPES[o.type],
+                        "size": [
+                            o.size.major,
+                            o.size.minor
+                        ] if o.size is not None else [],
+                        "angle": o.angle if o.angle is not None else 0,
+                    },
+                }
+
+            return feature
+
+        return json.JSONEncoder.default(self, o)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Output GeoJSON for each of the given celestial catalogs.')
@@ -38,7 +92,9 @@ def main():
             help="specifies the NGC catalog file path")
     parser.add_argument('--hyg', type=str, 
             help="specifies the NGC catalog file path")
-
+    parser.add_argument('--out', type=str, 
+            help="specifies the output json file path")
+    
     parser.add_argument('--magnitude', type=int, default=5,
             help="limit output to the specified magnitude")
 
@@ -48,46 +104,53 @@ def main():
             help="specifies that the output should be pretty-printed and the indent level")
     parser.add_argument('--invert-ra', action="store_true", default=False,
             help="invert the right ascension coordinates (useful for projections that expect longitude/latitude)")
+    parser.add_argument('--geojson', action="store_true", default=False,
+            help="output in GeoJSON Feature format")
+    parser.add_argument('--iau-symbols', action="store_true", default=False,
+            help="use IAU graphical symbols for objects when outputting GeoJSON")
+    
     args = parser.parse_args()
 
     json_args = {}
     if args.indent:
-        json_args = {sort_keys:True, indent:args.indent}
+        json_args = {'sort_keys':True, 'indent':args.indent}
 
-    hyg_features = []
+    objects = []
+
     if args.hyg:
         hyg_catalog = HYGStarCatalog(open(args.hyg))
-        hyg_features = [o.json() for o in hyg_catalog.values() if
-                o.magnitude <= args.magnitude]
-        
-    ngc_features = []
+        objects.extend([ o for o in hyg_catalog.values() 
+            if o.magnitude <= args.magnitude])
+
     if args.ngc:
         ngc_catalog = NGCCatalog(open(args.ngc))
-        ngc_features = [o.json() for o in ngc_catalog.values() if
-                o.magnitude <= args.magnitude]
+        objects.extend([o for o in ngc_catalog.values() 
+            if o.magnitude <= args.magnitude])
+        
 
-    consts_features = []
-    if args.constellations:
-        consts_catalog = ConstellationCatalog(open(args.constellations))
-        consts_features = [c.json() for c in consts_catalog.values()]
+    # if args.constellations:
+    #     consts_catalog = ConstellationCatalog(open(args.constellations))
+    #     objects.update(consts_catalog)
 
-    features = hyg_features + ngc_features + consts_features;
-    if args.invert_ra:
-        for feature in features:
-            ra = feature["geometry"]["coordinates"][0]
-            feature["geometry"]["coordinates"][0] = 360.0 - ra
-
-    collection = {
+    json_string = ""
+    if args.geojson:
+        collection = {
             "type": "FeatureCollection", 
-            "features": hyg_features + ngc_features + consts_features
-    }
+            "features": objects,
+        }
+        json_encoder = CelestialObjectGeoJSONEncoder(**json_args)
+        json_encoder.args = args
+        json_string = json_encoder.encode(collection)
+    else:
+        json_encoder = CelestialObjectEncoder(**json_args)
+        json_encoder.args = args
+        json_string = json_encoder.encode(objects)
 
+    outfile = open(args.out, 'w')
+    outfile.write(json_string)
+    outfile.close()
 
-    json_string = json.dumps(collection, **json_args)
-    print(json_string)
     return
-
-    
 
 
 if __name__ == "__main__":

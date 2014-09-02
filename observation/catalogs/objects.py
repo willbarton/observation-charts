@@ -28,7 +28,6 @@
 
 import re
 import csv
-import json
 
 from collections import OrderedDict, namedtuple
 
@@ -39,16 +38,16 @@ from utils import Size, EquatorialCoordinate
 ### Object Types
 # The standardized object types for Observation Charts
 OBJECT_TYPES = [
-        'Star',
-        'Double Star',
-        'Triple Star',
-        'Galaxy',
-        'Open Cluster',
-        'Globular Cluster',
-        'Planetary Nebula',
-        'Bright Nebula',
-        'Milky Way',
-        'Not Used',
+        'Star',             # 0
+        'Double Star',      # 1
+        'Triple Star',      # 2
+        'Galaxy',           # 3
+        'Open Cluster',     # 4
+        'Globular Cluster', # 5
+        'Planetary Nebula', # 6
+        'Bright Nebula',    # 7
+        'Milky Way',        # 8
+        'Not Used',         # 9
 ]
 
 # Abbrev   Description                       Example
@@ -176,31 +175,6 @@ class CelestialObject(object):
 
         self.__aliases[alias] = catalog
 
-    # Output a json 'Feature' dict for this object.
-    def json(self, tojson=False):
-        feature = {
-                "type": "Feature", 
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [self.ra.degrees, self.dec.degrees],
-                },
-                "properties": {
-                    "id": self.id,
-                    "magnitude": self.magnitude,
-                    "type": OBJECT_TYPES[self.type],
-                    "size": [
-                        self.size.major,
-                        self.size.minor
-                    ] if self.size is not None else [],
-                    "angle": self.angle if self.angle is not None else 0,
-                },
-            }
-
-        if tojson:
-            return json.dumps(feature);
-        
-        return feature
-
 
 class TestCelestialObject(unittest.TestCase):
     # Aliases are the primary functionality of the CelestialObject. It
@@ -226,14 +200,6 @@ class TestCelestialObject(unittest.TestCase):
         c.add_alias('The Orion Nebula')
         self.assertEqual(c.aliases, ['1976', '42', 'The Orion Nebula'])
         self.assertEqual(c.catalogs, ['NGC', 'M'])
-
-    def test_json(self):
-        ra = EquatorialCoordinate('5.91952477', hours=True)
-        dec = EquatorialCoordinate('07.40703634', degrees=True)
-        c = CelestialObject('27989', 'HIP', ra=ra, dec=dec)
-        c.type = 0
-        json_string = '{"type": "Feature", "geometry": {"type": "Point", "coordinates": [88.79287155, 7.40703634]}, "properties": {"magnitude": null, "type": "Star", "size": []}}'
-        self.assertEqual(json.loads(c.json(tojson=True)), json.loads(json_string))
 
 
 #### NGCObject
@@ -299,7 +265,7 @@ class NGCObject(CelestialObject):
             try: 
                 self.magnitude = float(self.__Bmag)
             except Exception as e:
-                self.magnitude = 1000
+                self.magnitude = 20
     
         try:
             self.angle = float(self.__PA)
@@ -360,13 +326,6 @@ class TestNGCObject(unittest.TestCase):
     def test_size(self):
         ngc_object = NGCObject(**self.ngc_object_dict)
         self.assertEqual(ngc_object.identifier, '1976')
-
-    def test_json(self):
-        ngc_object = NGCObject(**self.ngc_object_dict)
-        json_string = '{"geometry": {"type": "Point", "coordinates": [83.82166666666666, -5.390833333333333]}, "type": "Feature", "properties": {"size": [90.0, 60.0], "type": "Open Cluster", "magnitude": 4.0}}'
-        self.assertEqual(json.loads(ngc_object.json(tojson=True)), 
-                json.loads(json_string))
-        
 
 
 #### The NGC Catalog.
@@ -472,11 +431,6 @@ class TestHYGStar(unittest.TestCase):
         self.assertEqual(hyg_object.ra.degrees, 88.79287155)
         self.assertEqual(hyg_object.dec.degrees, 7.40703634)
 
-    def test_json(self):
-        hyg_object = HYGStar(**self.hyg_object_dict)
-        json_string = '{"properties": {"magnitude": 0.45, "size": [-1, -1], "type": "Star"}, "geometry": {"coordinates": [88.79287155, 7.40703634], "type": "Point"}, "type": "Feature"}'
-        self.assertEqual(json.loads(hyg_object.json(tojson=True)), json.loads(json_string))
-        
 
 #### The HYG Catalog
 # This class simply inherits from OrderedDict. It takes a file (or
@@ -498,14 +452,6 @@ class TestHYGStarCatalog(unittest.TestCase):
         stream = io.StringIO(initial_value=hyg_betelgeuse)
         hyg_catalog = HYGStarCatalog(stream)
         self.assertTrue('27989' in hyg_catalog)
-
-    def test_json(self):
-        import io
-        hyg_betelgeuse = '''StarID,HIP,HD,HR,Gliese,BayerFlamsteed,ProperName,RA,Dec,Distance,PMRA,PMDec,RV,Mag,AbsMag,Spectrum,ColorIndex,X,Y,Z,VX,VY,VZ
-27919,27989,39801,2061,,58Alp Ori,Betelgeuse,5.91952477,07.40703634,131.061598951507,27.33,10.86,21,0.45,-5.1373773102256,M2Ib,1.500,2.738,129.93909,16.89611,-1.693e-05,2.0769e-05,9.611e-06'''
-        stream = io.StringIO(initial_value=hyg_betelgeuse)
-        hyg_catalog = HYGStarCatalog(stream)
-
 
 if __name__ == "__main__":
     unittest.main()
