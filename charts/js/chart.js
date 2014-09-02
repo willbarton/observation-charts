@@ -45,27 +45,43 @@
         // Store the current rotation
         base.rotate = {x: 0, y: 90};
 
+        // Store the basic margins
+        base.margin = {top: 20, right: 10, bottom: 20, left: 10};
+
         // Initialization
         base.init = function(){
             base.options = $.extend({},ObservationChart.defaultOptions, options);
 
+            base.width = base.options.size.width - base.margin.left - base.margin.right;
+            base.height = base.options.size.height - base.margin.top - base.margin.bottom;
+
             // Select our container and create the SVG element.
             base.container = d3.select(base.el);
             base.svg = base.container.append('svg')
-                .attr('width', base.options.size.width)
-                .attr('height', base.options.size.height)
+                .attr('width', base.width + base.margin.left + base.margin.right)
+                .attr('height', base.height + base.margin.top + base.margin.bottom)
 
             // Create our groups.
-            base.lines_group = base.svg.append('g').attr('class', 'lines');
-            base.const_group = base.svg.append('g').attr('class', 'constellations');
-            base.obj_group = base.svg.append('g').attr('class', 'objects');
-            base.star_group = base.svg.append('g').attr('class', 'stars');
-            base.label_group = base.svg.append('g').attr('class', 'labels');
+            base.lines_group = base.svg.append('g')
+                .attr('class', 'lines')
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+            base.const_group = base.svg.append('g')
+                .attr('class', 'constellations')
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+            base.obj_group = base.svg.append('g')
+                .attr('class', 'objects')
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+            base.star_group = base.svg.append('g')
+                .attr('class', 'stars')
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+            base.label_group = base.svg.append('g')
+                .attr('class', 'labels')
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
             
             // Create and configure an instance of the orthographic projection
             base.projection = d3.geo.stereographic()
-                .scale(base.options.size.width * base.options.scale)
-                .translate([base.options.size.width / 2, base.options.size.height / 2])
+                .scale(base.width * base.options.scale)
+                .translate([base.width / 2, base.height / 2])
                 .clipAngle(90)
                 .rotate([base.rotate.x / 2, -base.rotate.y / 2]);
 
@@ -81,8 +97,8 @@
             // Overlay
             base.overlay = base.svg.selectAll('circle').data([base.rotate])
                 .enter().append('circle')
-                .attr('transform', 'translate(' + [base.options.size.width / 2, base.options.size.height / 2] + ')')
-                .attr('r', base.options.size.width / 2)
+                .attr('transform', 'translate(' + [base.width / 2, base.height / 2] + ')')
+                .attr('r', base.width / 2)
                 .attr('filter', 'url(#lightMe)')
                 .attr('class', 'overlay');
 
@@ -110,24 +126,6 @@
             // Load the constellation catalog
             // d3.json('consts.json', base.drawObjects);
 
-            // Drag Behavior
-            // -------------
-            /*
-            var dragBehavior = d3.behavior.drag()
-                .origin(Object)
-                .on('drag', function(d) {
-                    base.projection.rotate([(d.x = d3.event.x) / 2, -(d.y = d3.event.y) / 2]);
-                    base.svg.selectAll('path').attr('d', function(u) {
-                        // The circles are not properly generated when the
-                        // projection has the clipAngle option set.
-                        return base.path(u) ? base.path(u) : 'M 10 10';
-                    });
-                });
-
-            // Add the drag behavior to the overlay
-            base.overlay.call(dragBehavior);
-            */
-                
         };
 
         base.drawStars = function(error, data) {
@@ -149,45 +147,27 @@
             // -----
             // Compute the radius for the point features
             base.path.pointRadius(function(d) {
-                return d.properties ? rScale(d.properties.magnitude) : 1;
+                return rScale(d.properties.magnitude);
             });
             base.star_group.selectAll('path.star').data(stars)
                 .enter().append('path')
+                .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'star')
                 .attr('d', base.path);
-            /*
-            base.star_group.selectAll('circle.star').data(stars)
-                .enter().append('circle')
-                .attr('class', 'star')
-                .attr('cx', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
-                })
-                .attr('cy', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[1] : 0; 
-                })
-                .attr('r', function(d) { 
-                    return d.properties ? rScale(d.properties.magnitude) : 1;
-                });
-                */
 
             // Draw star labels
             base.label_group.selectAll('text.star-label').data(stars)
                 .enter().append('text')
+                .filter(function(d) { return base.path(d) != undefined; })
                 .attr("class", "star-label")
-                .style("text-anchor", function(d) { return d.geometry.coordinates[0] > -1 ? "start" : "end"; })
-
-                .attr("transform", function(d) { 
-                    return "translate(" + base.projection(d.geometry.coordinates) + ")"; })
-                .attr("x", function(d) { return d.geometry.coordinates[0] > -1 ? 6 : -6; })
-                .attr("dy", ".35em")
+                .style("text-anchor", "middle")
+                .attr("transform", function(d) { return "translate(" + base.path.centroid(d) + ")"; })
+                .attr("dy", function(d) { return rScale(d.properties.magnitude); })
                 .text(function(d) { 
-                    console.log(base.options.labels[d.properties.id]);
                     return base.options.labels[d.properties.id] ? 
                             base.options.labels[d.properties.id].name : 
                             (d.properties.name ? d.properties.name : ''); 
                 });
-                
-            
 
         };
 
@@ -223,6 +203,7 @@
                 .range(base.options.galaxies.scale);
             base.obj_group.selectAll('ellipse.galaxy').data(galaxies)
                 .enter().append('ellipse')
+                .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'galaxy')
                 .attr('cx', function(d) { 
                     return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
@@ -260,6 +241,7 @@
                 .range(base.options.openclusters.scale);
             base.obj_group.selectAll('circle.open-cluster').data(openClusters)
                 .enter().append('circle')
+                .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'open-cluster')
                 .attr('cx', function(d) { 
                     return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
@@ -289,6 +271,7 @@
             var globularClusterElms = base.obj_group.selectAll('g.globular-cluster')
                 .data(globularClusters)
                 .enter().append('g')
+                    .filter(function(d) { return base.path(d) != undefined; })
                     .attr('class', 'globular-cluster');
             globularClusterElms.append('circle')
                     .attr('cx', function(d) { 
@@ -351,6 +334,7 @@
             var planetaryNebulaElms = base.obj_group.selectAll('g.planetary-nebula')
                 .data(planetaryNebulas)
                 .enter().append('g')
+                    .filter(function(d) { return base.path(d) != undefined; })
                     .attr('class', 'planetary-nebula');
             planetaryNebulaElms.append('circle')
                     .attr('cx', function(d) { 
@@ -395,6 +379,7 @@
                                  ]);
                     });
 
+
             // Bright Nebulas
             // -----
             var brightNebulas = $.grep(data.features, function(d) {
@@ -409,6 +394,7 @@
                 .range(base.options.brightnebulas.scale);
             base.obj_group.selectAll('circle.bright-nebula').data(brightNebulas)
                 .enter().append('rect')
+                .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'bright-nebula')
                 .attr('x', function(d) { 
                     return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
@@ -436,7 +422,7 @@
         // effects how much of the sphere is visible.
         size: {
             width: 800,
-            height: 600,
+            height: 800,
         },
 
         // The scale of the chart. This effects how much of the sphere
@@ -453,7 +439,7 @@
         },
 
         stars: {
-            magnitude: 6,
+            magnitude: 5,
             scale: [6, 0.25]
         },
 
