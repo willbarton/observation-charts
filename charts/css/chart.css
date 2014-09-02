@@ -23,6 +23,10 @@
   fill: black;
   fill-opacity: 0.9;
 }
+.star-label { 
+    font-size: 8pt;
+    font-family: sans-serif;
+}
 
 /* The base style for a galaxy. This appears as a red ellipse with a
  * thin black border that is sized and oriented base on the object's
