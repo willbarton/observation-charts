@@ -28,6 +28,11 @@
  * This is loosely based on this Gist: https://gist.github.com/pnavarrc/9730300
  */ 
 
+var PI_OVER_180 = Math.PI/180;
+var TWO_PI = Math.PI * 2;
+var TWELVE_OVER_PI = 12/Math.PI;
+var ONEEIGHTY_OVER_PI = 180/Math.PI;
+
 (function($){
 
     ObservationChart = function(el, options){
@@ -65,6 +70,9 @@
             base.lines_group = base.svg.append('g')
                 .attr('class', 'lines')
                 .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+            base.chart_group = base.svg.append('g')
+                .attr('class', 'chart')
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
             base.const_group = base.svg.append('g')
                 .attr('class', 'constellations')
                 .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
@@ -87,7 +95,7 @@
 
             // Center the projection
             // Assume that RA is in hours (decimal) and dec is in degrees.
-            base.projection.rotate(base.center());
+            base.projection.rotate(base.utils.zenith());
 
             // Create and configure the geographic path generator
             base.path = d3.geo.path().projection(base.projection);
@@ -126,25 +134,99 @@
             // Load the constellation catalog
             // d3.json('consts.json', base.drawObjects);
 
+            // Draw chart features
+            base.drawZenith();
+            base.drawEcliptic();
+
             // Relax our labels
             base.utils.relax();
 
         };
 
-        // Center the projection based on our configuration. Either it's
-        // based on the observer's location and date/time, or it is the
-        // configured center;
-        base.center = function() {
-            if(!base.options.center) {
-                var date = base.options.datetime;
-                var location = base.options.location;
-                var dec = -1 * location.latitude;
-                var ra = base.utils.localSiderealTime() * 15;
+        // Draw labels for the given objects with the given css class
+        // and with the given functions for calculating dx and dy.
+        base.drawLabelsForObjects = function(objects, cssClass, x, y) {
+            var center_projected = base.path.centroid(base.utils.zenithFeature());
 
-                return [ra, dec];
-            }
-            return [base.options.center.ra * 15, -1 * base.options.center.dec];
+            base.label_group.selectAll('text.' + cssClass).data(objects)
+                .enter().append('text')
+                .filter(function(d) { 
+                    var path_defined = base.path(d) != undefined;
+                    var name_defined = base.options.labels[d.properties.id] != undefined || d.properties.name != undefined;
+                    return path_defined && name_defined;
+                })
+                .attr("class", cssClass)
+                .style("text-anchor", "middle")
+                .attr("transform", function(d) { 
+
+                    // The SVG coordinate system is from the top left
+                    // corner of the image. For calculating theta, we
+                    // need the origin to be in the center of the image
+                    var svgx = x(d);
+                    var svgy = y(d);
+
+                    var projx = svgx - base.width / 2;
+                    var projy = base.height / 2 - svgy;
+                    var angle = Math.atan(projy / projx) / PI_OVER_180;
+                    angle = 0;
+
+                    return "translate(" + svgx + "," + svgy + ")rotate(" + angle + ")";
+                })
+                .text(function(d) { 
+                    return base.options.labels[d.properties.id] ? 
+                            base.options.labels[d.properties.id].name : 
+                            (d.properties.name ? d.properties.name : ''); 
+                });
         };
+        
+        base.drawZenith = function() {
+            var feature = [base.utils.zenithFeature()];
+            base.path.pointRadius(2);
+            base.chart_group.selectAll('path.zenith').data(feature)
+                .enter().append('path')
+                .attr('class', 'zenith')
+                .attr('d', base.path);
+            // base.drawLabelsForObjects(feature, 'zenith-label', 
+            //         function(d) { return base.path.centroid(d)[0]; },
+            //         function(d) { return base.path.centroid(d)[1] + 15; });
+        };
+
+        base.drawEcliptic = function() {
+
+            // Construct and points of the ecliptic
+            var epsilon = 23.44 * PI_OVER_180;
+            var cos_epsilon = Math.cos(epsilon);
+            var sin_epsilon = Math.sin(epsilon);
+            var number_of_points = 100;
+            var points = [];
+            for (var i = 0; i < number_of_points; i++) {
+                var phi0 = i/number_of_points * TWO_PI;
+                var m_sin_phi0 = -1 * Math.sin(phi0);
+                var phi = Math.atan2(m_sin_phi0 * cos_epsilon, Math.cos(phi0));
+                var delta = Math.asin(m_sin_phi0 * sin_epsilon);
+                var point = [phi * TWELVE_OVER_PI * 15, delta * ONEEIGHTY_OVER_PI];
+                points.push(point);
+            }
+
+            var ecliptic_feature = [{ 
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString", 
+                    "coordinates": points
+                },
+                "properties": {"name": "Ecliptic"}
+            }];
+            
+            base.chart_group.selectAll('path.ecliptic').data(ecliptic_feature)
+                .enter().append('path')
+                .attr('class', 'ecliptic')
+                .attr('d', base.path);
+            // base.drawLabelsForObjects(ecliptic_feature, 'ecliptic-label', 
+            //         function(d) { return base.path.centroid(d)[0]; },
+            //         function(d) { return base.path.centroid(d)[1]; });
+
+        };
+            
 
         base.drawStars = function(error, data) {
             // Handle errors getting and parsing the data
@@ -173,23 +255,9 @@
                 .attr('class', 'star')
                 .attr('d', base.path);
 
-            // Draw star labels
-            base.label_group.selectAll('text.star-label').data(stars)
-                .enter().append('text')
-                .filter(function(d) { 
-                    var path_defined = base.path(d) != undefined;
-                    var name_defined = base.options.labels[d.properties.id] != undefined;
-                    return path_defined && name_defined;
-                })
-                .attr("class", "star-label")
-                .style("text-anchor", "middle")
-                .attr("transform", function(d) { return "translate(" + base.path.centroid(d) + ")"; })
-                .attr("dy", function(d) { return rScale(d.properties.magnitude) * 2; })
-                .text(function(d) { 
-                    return base.options.labels[d.properties.id] ? 
-                            base.options.labels[d.properties.id].name : 
-                            (d.properties.name ? d.properties.name : ''); 
-                });
+            base.drawLabelsForObjects(stars, 'star-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - rScale(d.properties.magnitude) * 2; });
 
         };
 
@@ -227,26 +295,20 @@
                 .enter().append('ellipse')
                 .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'galaxy')
-                .attr('cx', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
-                })
-                .attr('cy', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[1] : 0; 
-                })
-                .attr('rx', function(d) { 
-                    return d.properties ? galaxyMajorScale(d.properties.size[0]) : 1;
-                })
-                .attr('ry', function(d) {
-                    return d.properties ? galaxyMinorScale(d.properties.size[1]) : 1;
-                })
+                .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
+                .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
+                .attr('rx', function(d) { return galaxyMajorScale(d.properties.size[0]); })
+                .attr('ry', function(d) { return galaxyMinorScale(d.properties.size[1]); })
                 .attr('transform', function(d) {
                     var transform = 'rotate(' + d.properties.angle + ',' + 
                             base.projection(d.geometry.coordinates)[0] + ',' + 
                             base.projection(d.geometry.coordinates)[1] + ')';
                     return transform;
                 });
-
-
+            base.drawLabelsForObjects(galaxies, 'object-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - galaxyMajorScale(d.properties.size[0]) * 2; });
+                    
             // Open Clusters
             // -----
             // The open cluster is a yellow circle with a dashed border
@@ -265,16 +327,12 @@
                 .enter().append('circle')
                 .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'open-cluster')
-                .attr('cx', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
-                })
-                .attr('cy', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[1] : 0; 
-                })
-                .attr('r', function(d) { 
-                    return d.properties ? openClusterMagnitudeScale(
-                        d.properties.magnitude) : 1;
-                });
+                .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
+                .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
+                .attr('r', function(d) { return openClusterMagnitudeScale(d.properties.magnitude); });
+            base.drawLabelsForObjects(openClusters, 'object-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - openClusterMagnitudeScale(d.properties.magnitude) * 2; });
 
             // Globular Clusters
             // -----
@@ -296,21 +354,14 @@
                     .filter(function(d) { return base.path(d) != undefined; })
                     .attr('class', 'globular-cluster');
             globularClusterElms.append('circle')
-                    .attr('cx', function(d) { 
-                        return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
-                    })
-                    .attr('cy', function(d) { 
-                        return d.geometry ? base.projection(d.geometry.coordinates)[1] : 0; 
-                    })
-                    .attr('r', function(d) { 
-                        return d.properties ? globularClusterMagnitudeScale(
-                            d.properties.magnitude) : 1;
-                    });
+                    .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
+                    .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
+                    .attr('r', function(d) { return globularClusterMagnitudeScale(d.properties.magnitude); });
             globularClusterElms.append('path')
                     .attr('d', function(d) {
                         var coords = [
-                            d.geometry ? base.projection(d.geometry.coordinates)[0] : 0,
-                            d.geometry ? base.projection(d.geometry.coordinates)[1] : 0
+                            base.projection(d.geometry.coordinates)[0],
+                            base.projection(d.geometry.coordinates)[1]
                         ];
                         var line = lineFunction([
                                 [coords[0]-globularClusterMagnitudeScale(
@@ -325,8 +376,8 @@
             globularClusterElms.append('path')
                     .attr('d', function(d) {
                         var coords = [
-                            d.geometry ? base.projection(d.geometry.coordinates)[0] : 0,
-                            d.geometry ? base.projection(d.geometry.coordinates)[1] : 0
+                            base.projection(d.geometry.coordinates)[0],
+                            base.projection(d.geometry.coordinates)[1]
                         ];
                         return lineFunction([
                                 [coords[0],
@@ -337,6 +388,9 @@
                                      d.properties.magnitude)]
                                  ]);
                     });
+            base.drawLabelsForObjects(globularClusters, 'object-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - globularClusterMagnitudeScale(d.properties.magnitude) * 2; });
 
 
             // Planetary Nebulas
@@ -359,21 +413,14 @@
                     .filter(function(d) { return base.path(d) != undefined; })
                     .attr('class', 'planetary-nebula');
             planetaryNebulaElms.append('circle')
-                    .attr('cx', function(d) { 
-                        return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
-                    })
-                    .attr('cy', function(d) { 
-                        return d.geometry ? base.projection(d.geometry.coordinates)[1] : 0; 
-                    })
-                    .attr('r', function(d) { 
-                        return d.properties ? planetaryNebulaMagnitudeScale(
-                            d.properties.magnitude)/2 : 1;
-                    });
+                    .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
+                    .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
+                    .attr('r', function(d) { return planetaryNebulaMagnitudeScale(d.properties.magnitude)/2; });
             planetaryNebulaElms.append('path')
                     .attr('d', function(d) {
                         var coords = [
-                            d.geometry ? base.projection(d.geometry.coordinates)[0] : 0,
-                            d.geometry ? base.projection(d.geometry.coordinates)[1] : 0
+                            base.projection(d.geometry.coordinates)[0],
+                            base.projection(d.geometry.coordinates)[1]
                         ];
                         var line = lineFunction([
                                 [coords[0]-planetaryNebulaMagnitudeScale(
@@ -388,8 +435,8 @@
             planetaryNebulaElms.append('path')
                     .attr('d', function(d) {
                         var coords = [
-                            d.geometry ? base.projection(d.geometry.coordinates)[0] : 0,
-                            d.geometry ? base.projection(d.geometry.coordinates)[1] : 0
+                            base.projection(d.geometry.coordinates)[0],
+                            base.projection(d.geometry.coordinates)[1]
                         ];
                         return lineFunction([
                                 [coords[0],
@@ -400,7 +447,9 @@
                                      d.properties.magnitude)]
                                  ]);
                     });
-
+            base.drawLabelsForObjects(planetaryNebulas, 'object-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - planetaryNebulaMagnitudeScale(d.properties.magnitude) * 2; });
 
             // Bright Nebulas
             // -----
@@ -418,20 +467,15 @@
                 .enter().append('rect')
                 .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'bright-nebula')
-                .attr('x', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[0] : 0; 
-                })
-                .attr('y', function(d) { 
-                    return d.geometry ? base.projection(d.geometry.coordinates)[1] : 0; 
-                })
-                .attr('height', function(d) { 
-                    return d.properties ? brightNebulaMagnitudeScale(
-                        d.properties.magnitude) : 1;
-                })
-                .attr('width', function(d) { 
-                    return d.properties ? brightNebulaMagnitudeScale(
-                        d.properties.magnitude) : 1;
-                });
+                .attr('x', function(d) { return base.projection(d.geometry.coordinates)[0]; })
+                .attr('y', function(d) { return base.projection(d.geometry.coordinates)[1]; })
+                .attr('height', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); })
+                .attr('width', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); });
+            base.drawLabelsForObjects(brightNebulas, 'object-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) * 2; });
+
+            
         };
         
 
@@ -442,7 +486,6 @@
         // Constraint relaxation for labels
         base.utils.alpha = 0.5;
         base.utils.spacing = 12;
-
         base.utils.relax = function() {
             again = false;
             textLabels = base.label_group.selectAll('text');
@@ -522,6 +565,32 @@
             var LMST =  24.0*frac((GMST + lon/15.0)/24.0);
             return LMST;
         };
+
+        base.utils.zenith = function() {
+            if(!base.options.center) {
+                var date = base.options.datetime;
+                var location = base.options.location;
+                var dec = -1 * location.latitude;
+                var ra = base.utils.localSiderealTime() * 15;
+
+                console.log("center", [ra, dec]);
+                return [ra, dec];
+            }
+            return [base.options.center.ra * 15, -1 * base.options.center.dec];
+        };
+
+        base.utils.zenithFeature = function() {
+            var coords = base.utils.zenith();
+            var zenith_feature = { 
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point", 
+                    "coordinates": [360 - coords[0], -1 * coords[1]]
+                },
+                "properties": {"name": "Zenith"}
+            };
+            return zenith_feature;
+        };
         
         // Run initializer
         base.init();
@@ -531,8 +600,8 @@
         // The size of the chart  viewport. This plus the `scale`
         // effects how much of the sphere is visible.
         size: {
-            width: 800,
-            height: 800,
+            width: 1200,
+            height: 1200,
         },
 
         // The scale of the chart. This effects how much of the sphere
@@ -556,11 +625,11 @@
         // that you can see the entire sphere, this will effect its
         // rotation.
         // RA is presumed in decimal hours, dec in degrees.
-        // center: {
-        //    ra: 0.5,
-        //    dec: 60.5 
-        // },
         center: undefined,
+        // center: {
+        //     ra: 5.8,
+        //     dec: 0.0 
+        // },
 
         stars: {
             magnitude: 5,
@@ -593,6 +662,7 @@
         },
 
         labels: {
+            // Bright, common named stars
             HIP24436: {name:'Rigel', },
             HIP27989: {name:'Betelgeuse', },
             HIP32349: {name:'Sirius', },
@@ -620,6 +690,214 @@
             HIP60718: {name:'Acrux', },
             HIP30438: {name:'Canopus', },
             HIP7588:  {name:'Achernar', },
+
+            // Messier objects (in our catalog by their NGC numbers)
+            NGC1952: {name: 'M1',},
+            NGC7089: {name: 'M2',},
+            NGC5272: {name: 'M3',},
+            NGC6121: {name: 'M4',},
+            NGC5904: {name: 'M5',},
+            NGC6405: {name: 'M6',},
+            NGC6475: {name: 'M7',},
+            NGC6523: {name: 'M8',},
+            NGC6333: {name: 'M9',},
+            NGC6254: {name: 'M10',},
+            NGC6705: {name: 'M11',},
+            NGC6218: {name: 'M12',},
+            NGC6205: {name: 'M13',},
+            NGC6402: {name: 'M14',},
+            NGC7078: {name: 'M15',},
+            NGC6611: {name: 'M16',},
+            NGC6618: {name: 'M17',},
+            NGC6613: {name: 'M18',},
+            NGC6273: {name: 'M19',},
+            NGC6514: {name: 'M20',},
+            NGC6531: {name: 'M21',},
+            NGC6656: {name: 'M22',},
+            NGC6494: {name: 'M23',},
+            IC4715: {name: 'M24',},
+            IC4725: {name: 'M25',},
+            NGC6694: {name: 'M26',},
+            NGC6853: {name: 'M27',},
+            NGC6626: {name: 'M28',},
+            NGC6913: {name: 'M29',},
+            NGC7099: {name: 'M30',},
+            NGC224: {name: 'M31',},
+            NGC221: {name: 'M32',},
+            NGC598: {name: 'M33',},
+            NGC1039: {name: 'M34',},
+            NGC2168: {name: 'M35',},
+            NGC1960: {name: 'M36',},
+            NGC2099: {name: 'M37',},
+            NGC1912: {name: 'M38',},
+            NGC7092: {name: 'M39',},
+            NGC2287: {name: 'M41',},
+            NGC1976: {name: 'M42',},
+            NGC1982: {name: 'M43',},
+            NGC2632: {name: 'M44',},
+            NGC2437: {name: 'M46',},
+            NGC2422: {name: 'M47',},
+            NGC2548: {name: 'M48',},
+            NGC4472: {name: 'M49',},
+            NGC2323: {name: 'M50',},
+            NGC5194: {name: 'M51',},
+            NGC5195: {name: 'M51',},
+            NGC7654: {name: 'M52',},
+            NGC5024: {name: 'M53',},
+            NGC6715: {name: 'M54',},
+            NGC6809: {name: 'M55',},
+            NGC6779: {name: 'M56',},
+            NGC6720: {name: 'M57',},
+            NGC4579: {name: 'M58',},
+            NGC4621: {name: 'M59',},
+            NGC4649: {name: 'M60',},
+            NGC4303: {name: 'M61',},
+            NGC6266: {name: 'M62',},
+            NGC5055: {name: 'M63',},
+            NGC4826: {name: 'M64',},
+            NGC3623: {name: 'M65',},
+            NGC3627: {name: 'M66',},
+            NGC2682: {name: 'M67',},
+            NGC4590: {name: 'M68',},
+            NGC6637: {name: 'M69',},
+            NGC6681: {name: 'M70',},
+            NGC6838: {name: 'M71',},
+            NGC6981: {name: 'M72',},
+            NGC6994: {name: 'M73',},
+            NGC628: {name: 'M74',},
+            NGC6864: {name: 'M75',},
+            NGC650: {name: 'M76',},
+            NGC651: {name: 'M76',},
+            NGC1068: {name: 'M77',},
+            NGC2068: {name: 'M78',},
+            NGC1904: {name: 'M79',},
+            NGC6093: {name: 'M80',},
+            NGC3031: {name: 'M81',},
+            NGC3034: {name: 'M82',},
+            NGC5236: {name: 'M83',},
+            NGC4374: {name: 'M84',},
+            NGC4382: {name: 'M85',},
+            NGC4406: {name: 'M86',},
+            NGC4486: {name: 'M87',},
+            NGC4501: {name: 'M88',},
+            NGC4552: {name: 'M89',},
+            NGC4569: {name: 'M90',},
+            NGC4548: {name: 'M91',},
+            NGC6341: {name: 'M92',},
+            NGC2447: {name: 'M93',},
+            NGC4736: {name: 'M94',},
+            NGC3351: {name: 'M95',},
+            NGC3368: {name: 'M96',},
+            NGC3587: {name: 'M97',},
+            NGC4192: {name: 'M98',},
+            NGC4254: {name: 'M99',},
+            NGC4321: {name: 'M100',},
+            NGC5457: {name: 'M101',},
+            NGC581: {name: 'M103',},
+            NGC4594: {name: 'M104',},
+            NGC3379: {name: 'M105',},
+            NGC4258: {name: 'M106',},
+            NGC6171: {name: 'M107',},
+            NGC3556: {name: 'M108',},
+            NGC3992: {name: 'M109',},
+            NGC205: {name: 'M110',},
+
+            // Interesting NGC objects worth labeling (from SEDS)
+            NGC104: {name: 'NGC 104',},
+            NGC188: {name: 'NGC 188',},
+            NGC189: {name: 'NGC 189',},
+            NGC206: {name: 'NGC 206',},
+            NGC225: {name: 'NGC 225',},
+            NGC253: {name: 'NGC 253',},
+            NGC292: {name: 'NGC 292',},
+            NGC381: {name: 'NGC 381',},
+            NGC595: {name: 'NGC 595',},
+            NGC604: {name: 'NGC 604',},
+            NGC659: {name: 'NGC 659',},
+            NGC752: {name: 'NGC 752',},
+            NGC869: {name: 'NGC 869',},
+            NGC884: {name: 'NGC 884',},
+            NGC891: {name: 'NGC 891',},
+            NGC1055: {name: 'NGC 1055',},
+            NGC1432: {name: 'NGC 1432',},
+            NGC1435: {name: 'NGC 1435',},
+            NGC2023: {name: 'NGC 2023',},
+            NGC2070: {name: 'NGC 2070',},
+            NGC2169: {name: 'NGC 2169',},
+            NGC2175: {name: 'NGC 2175',},
+            NGC2204: {name: 'NGC 2204',},
+            NGC2237: {name: 'NGC 2237',},
+            NGC2238: {name: 'NGC 2238',},
+            NGC2239: {name: 'NGC 2239',},
+            NGC2244: {name: 'NGC 2244',},
+            NGC2246: {name: 'NGC 2246',},
+            NGC2264: {name: 'NGC 2264',},
+            NGC2349: {name: 'NGC 2349',},
+            NGC2360: {name: 'NGC 2360',},
+            NGC2362: {name: 'NGC 2362',},
+            NGC2403: {name: 'NGC 2403',},
+            NGC2419: {name: 'NGC 2419',},
+            NGC2438: {name: 'NGC 2438',},
+            NGC2451: {name: 'NGC 2451',},
+            NGC2477: {name: 'NGC 2477',},
+            NGC2516: {name: 'NGC 2516',},
+            NGC2546: {name: 'NGC 2546',},
+            NGC2547: {name: 'NGC 2547',},
+            NGC2903: {name: 'NGC 2903',},
+            NGC2976: {name: 'NGC 2976',},
+            NGC3077: {name: 'NGC 3077',},
+            NGC3115: {name: 'NGC 3115',},
+            NGC3228: {name: 'NGC 3228',},
+            NGC3293: {name: 'NGC 3293',},
+            NGC3372: {name: 'NGC 3372',},
+            NGC3532: {name: 'NGC 3532',},
+            NGC3628: {name: 'NGC 3628',},
+            NGC3766: {name: 'NGC 3766',},
+            NGC3953: {name: 'NGC 3953',},
+            NGC4565: {name: 'NGC 4565',},
+            NGC4571: {name: 'NGC 4571',},
+            NGC4631: {name: 'NGC 4631',},
+            NGC4656: {name: 'NGC 4656',},
+            NGC4755: {name: 'NGC 4755',},
+            NGC4833: {name: 'NGC 4833',},
+            NGC5128: {name: 'NGC 5128',},
+            NGC5139: {name: 'NGC 5139',},
+            NGC5195: {name: 'NGC 5195',},
+            NGC5281: {name: 'NGC 5281',},
+            NGC5662: {name: 'NGC 5662',},
+            NGC5907: {name: 'NGC 5907',},
+            NGC6025: {name: 'NGC 6025',},
+            NGC6124: {name: 'NGC 6124',},
+            NGC6231: {name: 'NGC 6231',},
+            NGC6242: {name: 'NGC 6242',},
+            NGC6397: {name: 'NGC 6397',},
+            NGC6530: {name: 'NGC 6530',},
+            NGC6543: {name: 'NGC 6543',},
+            NGC6603: {name: 'NGC 6603',},
+            NGC6633: {name: 'NGC 6633',},
+            NGC6712: {name: 'NGC 6712',},
+            NGC6819: {name: 'NGC 6819',},
+            NGC6822: {name: 'NGC 6822',},
+            NGC6866: {name: 'NGC 6866',},
+            NGC6946: {name: 'NGC 6946',},
+            NGC7000: {name: 'NGC 7000',},
+            NGC7009: {name: 'NGC 7009',},
+            NGC7293: {name: 'NGC 7293',},
+            NGC7331: {name: 'NGC 7331',},
+            NGC7380: {name: 'NGC 7380',},
+            NGC7479: {name: 'NGC 7479',},
+            NGC7789: {name: 'NGC 7789',},
+            IC10: {name: 'IC 10',},
+            IC349: {name: 'IC 349',},
+            IC434: {name: 'IC 434',},
+            IC1434: {name: 'IC 1434',},
+            IC2391: {name: 'IC 2391',},
+            IC2395: {name: 'IC 2395',},
+            IC2488: {name: 'IC 2488',},
+            IC2602: {name: 'IC 2602',},
+            IC4665: {name: 'IC 4665',},
+            IC5152: {name: 'IC 5152',},
+
         },
 
     };

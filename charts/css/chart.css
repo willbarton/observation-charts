@@ -22,10 +22,7 @@
   fill: black;
   fill-opacity: 0.9;
 }
-.star-label { 
-    font-size: 8pt;
-    font-family: sans-serif;
-}
+
 
 /* The base style for a galaxy. This appears as a red ellipse with a
  * thin black border that is sized and oriented base on the object's
@@ -53,7 +50,7 @@
 .globular-cluster circle {
     fill: rgb(255, 242, 0); 
     stroke-width: 0.32; 
-    stroke: rgb(35,31,32);,
+    stroke: rgb(35,31,32);
 }
 .globular-cluster path {
     stroke-width: 0.32; 
@@ -66,7 +63,7 @@
 .planetary-nebula {
     fill: rgb(128, 204, 40); 
     stroke-width: 0.32; 
-    stroke: rgb(35, 31, 32);,
+    stroke: rgb(35, 31, 32);
 }
 
 /* The base style for a bright nebula. This appears as a green
@@ -76,4 +73,41 @@
     stroke-width: 0.32; 
     stroke: rgb(35, 31, 32);
 }
+
+/* Chart features */
+.zenith {
+    fill: rgb(128,214,247);
+}
+.ecliptic {
+    fill: none;
+    stroke-width: 1.8; 
+    stroke: rgb(128,214,247);
+}
+
+/* Labels */
+.star-label { 
+    font-size: 80%;
+    font-family: sans-serif;
+    fill: rgba(35, 31, 32, 0.75);
+}
+.object-label { 
+    font-size: 80%;
+    font-family: sans-serif;
+    font-style: italic;
+    text-transform: uppercase;
+    fill: rgba(35, 31, 32, 0.75);
+}
+.zenith-label { 
+    font-size: 80%;
+    font-family: sans-serif;
+    text-transform: uppercase;
+    fill: rgba(128, 214, 247, 0.5);
+}
+.ecliptic-label { 
+    font-size: 80%;
+    font-family: sans-serif;
+    text-transform: uppercase;
+    fill: rgba(128, 214, 247, 0.5);
+}
+
 
