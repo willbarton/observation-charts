@@ -5,7 +5,7 @@
 /* The basic field on which we are drawing. A sterographic globe. */
 .globe {
     fill: white;
-    stroke-width: 0.25;
+    stroke-width: 0.5;
     stroke: rgb(35, 31, 32);
 }
 
@@ -74,6 +74,16 @@
     stroke: rgb(35, 31, 32);
 }
 
+.constellation {
+    fill: none; 
+    stroke-width: 0.96; 
+    stroke-linecap: butt; 
+    stroke-linejoin: miter; 
+    stroke: rgb(173,222,138); 
+    stroke-opacity: 1; 
+    stroke-miterlimit: 4;'
+}
+
 /* Chart features */
 .zenith {
     fill: rgb(128,214,247);
@@ -109,5 +119,16 @@
     text-transform: uppercase;
     fill: rgba(128, 214, 247, 0.5);
 }
+
+.constellation-label {
+    fill: black; 
+    font-family: "Trebuchet MS", Helvetica, Sans; 
+    font-size: 12px; 
+    text-anchor: bottom; 
+    dominant-baseline:top; 
+    text-transform: uppercase; 
+    font-style: italic;'
+}
+
 
 

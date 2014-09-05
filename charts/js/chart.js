@@ -125,6 +125,9 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     .attr('d', base.path);
             }
                 
+            // Load the constellations
+            d3.json('constellations.json', base.drawConstellations);
+
             // Load the star catalog
             d3.json('stars.json', base.drawStars);
 
@@ -192,19 +195,20 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         };
 
         base.drawEcliptic = function() {
-
             // Construct and points of the ecliptic
             var epsilon = 23.44 * PI_OVER_180;
             var cos_epsilon = Math.cos(epsilon);
             var sin_epsilon = Math.sin(epsilon);
             var number_of_points = 100;
             var points = [];
-            for (var i = 0; i < number_of_points; i++) {
+            for (var i = 0; i <= number_of_points; i++) {
                 var phi0 = i/number_of_points * TWO_PI;
                 var m_sin_phi0 = -1 * Math.sin(phi0);
                 var phi = Math.atan2(m_sin_phi0 * cos_epsilon, Math.cos(phi0));
                 var delta = Math.asin(m_sin_phi0 * sin_epsilon);
-                var point = [phi * TWELVE_OVER_PI * 15, delta * ONEEIGHTY_OVER_PI];
+                var point_ra = 360 - (phi * TWELVE_OVER_PI * 15);
+                var point_dec = delta * ONEEIGHTY_OVER_PI;
+                var point = [point_ra, point_dec];
                 points.push(point);
             }
 
@@ -227,6 +231,20 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         };
             
+        base.drawConstellations = function(error, data) {
+            // Handle errors getting and parsing the data
+            if (error) { console.log(error); return error; }
+
+            base.const_group.selectAll('path.constellation').data(data.features)
+                .enter().append('path')
+                .attr('class', 'constellation')
+                .attr('d', function(d) { console.log(d); return base.path(d); });
+
+            // base.drawLabelsForObjects(data, 'constellation-label', 
+            //         function(d) { return base.path.centroid(d)[0]; },
+            //         function(d) { return base.path.centroid(d)[1]; });
+
+        };
 
         base.drawStars = function(error, data) {
             // Handle errors getting and parsing the data
@@ -253,6 +271,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .enter().append('path')
                 .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'star')
+                .attr('id', function(d) { return d.properties.id; })
                 .attr('d', base.path);
 
             base.drawLabelsForObjects(stars, 'star-label', 
@@ -475,9 +494,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) * 2; });
 
-            
         };
-        
 
         // Utility functions 
         // ----
@@ -573,7 +590,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 var dec = -1 * location.latitude;
                 var ra = base.utils.localSiderealTime() * 15;
 
-                console.log("center", [ra, dec]);
+                // console.log("center", [ra, dec]);
                 return [ra, dec];
             }
             return [base.options.center.ra * 15, -1 * base.options.center.dec];
@@ -600,8 +617,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // The size of the chart  viewport. This plus the `scale`
         // effects how much of the sphere is visible.
         size: {
-            width: 1200,
-            height: 1200,
+            width: 400,
+            height: 400,
         },
 
         // The scale of the chart. This effects how much of the sphere
@@ -615,8 +632,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         // The location from which the sky is observered
         location: {
-            latitude: 40,
-            longitude: -73.883611,
+            latitude: 40.7528000,
+            longitude: -73.9765222
         },
             
         // OR
@@ -903,7 +920,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
     };
     
     $.fn.observationChart = function(options){
-        console.log("observation chart");
         return this.each(function(){
             (new ObservationChart(this, options));
         });
