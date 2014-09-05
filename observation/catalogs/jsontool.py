@@ -28,11 +28,11 @@
 
 import argparse
 from objects import OBJECT_TYPES, CelestialObject, NGCCatalog, HYGStarCatalog
-from constellations import ConstellationCatalog
+from constellations import ConstellationCatalog, Constellation
 
 import json
 
-class CelestialObjectEncoder(json.JSONEncoder):
+class CatalogEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, CelestialObject):
             # Custom JSON format
@@ -55,7 +55,7 @@ class CelestialObjectEncoder(json.JSONEncoder):
 
 
     
-class CelestialObjectGeoJSONEncoder(json.JSONEncoder):
+class CatalogsGeoJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, CelestialObject):
             # GEOJSON feature
@@ -78,6 +78,30 @@ class CelestialObjectGeoJSONEncoder(json.JSONEncoder):
                         ] if o.size is not None else [],
                         "angle": o.angle if o.angle is not None else 0,
                     },
+                }
+            return feature
+
+        if isinstance(o, Constellation):
+            lines = []
+            for line in o.lines:
+                points = []
+                for p in line.positions:
+                    points.append([
+                            p.ra.degrees if not self.args.invert_ra else 360 - p.ra.degrees, 
+                            p.dec.degrees])
+                lines.append(points)
+            
+            feature = {
+                    "type": "Feature", 
+                    "geometry": {
+                        "type": "MultiLineString", 
+                        "coordinates": lines,
+                    },
+                    "properties": {
+                        "id": o.abbr,
+                        "abbr": o.abbr,
+                        "name": o.name,
+                    }
                 }
 
             return feature
@@ -127,22 +151,21 @@ def main():
         objects.extend([o for o in ngc_catalog.values() 
             if o.magnitude <= args.magnitude])
         
-
-    # if args.constellations:
-    #     consts_catalog = ConstellationCatalog(open(args.constellations))
-    #     objects.update(consts_catalog)
-
+    if args.constellations:
+        const_catalog = ConstellationCatalog(open(args.constellations))
+        objects.extend([o for o in const_catalog.values()])
+        
     json_string = ""
     if args.geojson:
         collection = {
             "type": "FeatureCollection", 
             "features": objects,
         }
-        json_encoder = CelestialObjectGeoJSONEncoder(**json_args)
+        json_encoder = CatalogsGeoJSONEncoder(**json_args)
         json_encoder.args = args
         json_string = json_encoder.encode(collection)
     else:
-        json_encoder = CelestialObjectEncoder(**json_args)
+        json_encoder = CatalogEncoder(**json_args)
         json_encoder.args = args
         json_string = json_encoder.encode(objects)
 
