@@ -214,7 +214,7 @@ class ConstellationCatalog(dict):
             line = Line()
 
             for ra, dec in itertools.zip_longest(*([iter(row[1:])] * 2)):
-                ra_coord = EquatorialCoordinate(ra, degrees=True)
+                ra_coord = EquatorialCoordinate(ra, hours=True)
                 dec_coord = EquatorialCoordinate(dec, degrees=True)
                 line.positions.append(Position(ra_coord, dec_coord))
     

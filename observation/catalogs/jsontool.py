@@ -124,6 +124,10 @@ def main():
 
     parser.add_argument('--constellations', type=str, 
             help="specifies the constellations file path")
+
+    parser.add_argument('--specifically', action='append', default=[],
+            help="specifies the specific ids to be included (constellations only at the moment)")
+
     parser.add_argument('--indent', type=int,
             help="specifies that the output should be pretty-printed and the indent level")
     parser.add_argument('--invert-ra', action="store_true", default=False,
@@ -144,17 +148,20 @@ def main():
     if args.hyg:
         hyg_catalog = HYGStarCatalog(open(args.hyg))
         objects.extend([ o for o in hyg_catalog.values() 
-            if o.magnitude <= args.magnitude])
+            if (o.magnitude <= args.magnitude) and 
+                (len(args.specifically) == 0 or o.id in args.specifically)])
 
     if args.ngc:
         ngc_catalog = NGCCatalog(open(args.ngc))
         objects.extend([o for o in ngc_catalog.values() 
-            if o.magnitude <= args.magnitude])
+            if (o.magnitude <= args.magnitude) and
+                (len(args.specifically) == 0 or o.id in args.specifically)])
         
     if args.constellations:
         const_catalog = ConstellationCatalog(open(args.constellations))
-        objects.extend([o for o in const_catalog.values()])
-        
+        objects.extend([o for o in const_catalog.values() 
+            if (len(args.specifically) == 0 or o.abbr in args.specifically)])
+    
     json_string = ""
     if args.geojson:
         collection = {
@@ -169,9 +176,13 @@ def main():
         json_encoder.args = args
         json_string = json_encoder.encode(objects)
 
-    outfile = open(args.out, 'w')
-    outfile.write(json_string)
-    outfile.close()
+    
+    if args.out:
+        outfile = open(args.out, 'w')
+        outfile.write(json_string)
+        outfile.close()
+    else:
+        print(json_string)
 
     return
 
