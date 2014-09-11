@@ -70,6 +70,7 @@ class CatalogsGeoJSONEncoder(json.JSONEncoder):
                     },
                     "properties": {
                         "id": o.id,
+                        "name": o.id, # name might want to be overriden
                         "magnitude": o.magnitude,
                         "type": OBJECT_TYPES[o.type],
                         "size": [

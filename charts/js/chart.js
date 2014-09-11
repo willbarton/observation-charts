@@ -147,17 +147,17 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         base.drawLabelsForObjects = function(objects, cssClass, x, y) {
             var center_projected = base.path.centroid(base.utils.zenithFeature());
 
-            base.label_group.selectAll('text.' + cssClass).data(objects)
-                .enter().append('text')
-                .filter(function(d) { 
+            base.label_group.selectAll('text.' + cssClass)
+                .data(objects.filter(function(d) { 
                     var path_defined = base.path(d) != undefined;
-                    var name_defined = base.options.labels[d.properties.id] != undefined || d.properties.name != undefined;
+                    var name_defined = base.data.overrides(d).hasOwnProperty("name");
                     return path_defined && name_defined;
-                })
+                }))
+                .enter().append('text')
+                .attr("id", function(d) { return d.properties.id + "-label"; })
                 .attr("class", cssClass)
                 .style("text-anchor", "middle")
                 .attr("transform", function(d) { 
-
                     // The SVG coordinate system is from the top left
                     // corner of the image. For calculating theta, we
                     // need the origin to be in the center of the image
@@ -172,9 +172,12 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     return "translate(" + svgx + "," + svgy + ")rotate(" + angle + ")";
                 })
                 .text(function(d) { 
-                    return base.options.labels[d.properties.id] ? 
-                            base.options.labels[d.properties.id].name : 
-                            (d.properties.name ? d.properties.name : ''); 
+                    var path_defined = base.path(d) != undefined;
+                    var name_defined = base.data.overrides(d).hasOwnProperty("name");
+                    console.log(path_defined && name_defined);
+                    
+                    // return d.properties.name;
+                    return base.data.overrides(d).name;
                 });
 
         };
@@ -266,9 +269,9 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             base.path.pointRadius(function(d) {
                 return rScale(d.properties.magnitude);
             });
-            base.star_group.selectAll('path.star').data(stars)
+            base.star_group.selectAll('path.star')
+                .data(stars.filter(function(d) { return base.path(d) != undefined; }))
                 .enter().append('path')
-                .filter(function(d) { return base.path(d) != undefined; })
                 .attr('class', 'star')
                 .attr('id', function(d) { return d.properties.id; })
                 .attr('d', base.path);
@@ -310,9 +313,10 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .domain(d3.extent(galaxies, function(d) {
                     return d3.min(d.properties.size); }))
                 .range(base.options.galaxies.scale);
-            base.obj_group.selectAll('ellipse.galaxy').data(galaxies)
+            base.obj_group.selectAll('ellipse.galaxy')
+                .data(galaxies.filter(function(d) { return base.path(d) != undefined; }))
                 .enter().append('ellipse')
-                .filter(function(d) { return base.path(d) != undefined; })
+                .attr("id", function(d) { return d.properties.id; })
                 .attr('class', 'galaxy')
                 .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
                 .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
@@ -342,9 +346,10 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .domain(d3.extent(openClusters, function(d) {
                     return d.properties.magnitude; }))
                 .range(base.options.openclusters.scale);
-            base.obj_group.selectAll('circle.open-cluster').data(openClusters)
+            base.obj_group.selectAll('circle.open-cluster')
+                .data(openClusters.filter(function(d) { return base.path(d) != undefined; }))
                 .enter().append('circle')
-                .filter(function(d) { return base.path(d) != undefined; })
+                .attr("id", function(d) { return d.properties.id; })
                 .attr('class', 'open-cluster')
                 .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
                 .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
@@ -368,9 +373,9 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     return d.properties.magnitude; }))
                 .range(base.options.globularclusters.scale);
             var globularClusterElms = base.obj_group.selectAll('g.globular-cluster')
-                .data(globularClusters)
+                .data(globularClusters.filter(function(d) { return base.path(d) != undefined; }))
                 .enter().append('g')
-                    .filter(function(d) { return base.path(d) != undefined; })
+                    .attr("id", function(d) { return d.properties.id; })
                     .attr('class', 'globular-cluster');
             globularClusterElms.append('circle')
                     .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
@@ -427,9 +432,9 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     return d.properties.magnitude; }))
                 .range(base.options.planetarynebulas.scale);
             var planetaryNebulaElms = base.obj_group.selectAll('g.planetary-nebula')
-                .data(planetaryNebulas)
+                .data(planetaryNebulas.filter(function(d) { return base.path(d) != undefined; }))
                 .enter().append('g')
-                    .filter(function(d) { return base.path(d) != undefined; })
+                    .attr("id", function(d) { return d.properties.id; })
                     .attr('class', 'planetary-nebula');
             planetaryNebulaElms.append('circle')
                     .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
@@ -482,9 +487,10 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .domain(d3.extent(brightNebulas, function(d) {
                     return d.properties.magnitude; }))
                 .range(base.options.brightnebulas.scale);
-            base.obj_group.selectAll('circle.bright-nebula').data(brightNebulas)
+            base.obj_group.selectAll('circle.bright-nebula')
+                .data(brightNebulas.filter(function(d) { return base.path(d) != undefined; }))
                 .enter().append('rect')
-                .filter(function(d) { return base.path(d) != undefined; })
+                .attr("id", function(d) { return d.properties.id; })
                 .attr('class', 'bright-nebula')
                 .attr('x', function(d) { return base.projection(d.geometry.coordinates)[0]; })
                 .attr('y', function(d) { return base.projection(d.geometry.coordinates)[1]; })
@@ -495,6 +501,19 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) * 2; });
 
         };
+
+        base.data = {};
+
+        // Return a new object for d.properties that replaces any
+        // members with any specified override values.
+        base.data.overrides = function(d) {
+            if (base.options.overrides[d.properties.id] == undefined)
+                return d.properties;
+
+            var overrides = base.options.overrides[d.properties.id];
+            var overrideProperties = $.extend({}, d.properties, overrides);
+            return overrideProperties;
+        }
 
         // Utility functions 
         // ----
@@ -650,35 +669,42 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         stars: {
             magnitude: 5,
-            scale: [6, 0.25]
+            scale: [6, 0.25],
+            labelAll: false
         },
 
         galaxies: {
             magnitude: 8,
-            scale: [2, 8]
+            scale: [2, 8],
+            labelAll: false
         },
         
         openclusters: {
             magnitude: 6,
-            scale: [6,3]
+            scale: [6,3],
+            labelAll: false
         },
 
         globularclusters: {
             magnitude: 8,
-            scale: [8,4]
+            scale: [8,4],
+            labelAll: false
         },
 
         planetarynebulas: {
             magnitude: 10,
-            scale: [12,6]
+            scale: [12,6],
+            labelAll: false
         },
 
         brightnebulas: {
             magnitude: 10,
-            scale: [12,6]
+            scale: [12,6],
+            labelAll: true
         },
 
-        labels: {
+        // Override settings/label for any given object
+        overrides: {
             // Bright, common named stars
             HIP24436: {name:'Rigel', },
             HIP27989: {name:'Betelgeuse', },
@@ -708,7 +734,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             HIP30438: {name:'Canopus', },
             HIP7588:  {name:'Achernar', },
 
-            // Messier objects (in our catalog by their NGC numbers)
+            // Messier objects (in our catalog by their NGCnumbers)
             NGC1952: {name: 'M1',},
             NGC7089: {name: 'M2',},
             NGC5272: {name: 'M3',},
@@ -819,103 +845,101 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             NGC3992: {name: 'M109',},
             NGC205: {name: 'M110',},
 
-            // Interesting NGC objects worth labeling (from SEDS)
-            /*
-            NGC104: {name: 'NGC 104',},
-            NGC188: {name: 'NGC 188',},
-            NGC189: {name: 'NGC 189',},
-            NGC206: {name: 'NGC 206',},
-            NGC225: {name: 'NGC 225',},
-            NGC253: {name: 'NGC 253',},
-            NGC292: {name: 'NGC 292',},
-            NGC381: {name: 'NGC 381',},
-            NGC595: {name: 'NGC 595',},
-            NGC604: {name: 'NGC 604',},
-            NGC659: {name: 'NGC 659',},
-            NGC752: {name: 'NGC 752',},
-            NGC869: {name: 'NGC 869',},
-            NGC884: {name: 'NGC 884',},
-            NGC891: {name: 'NGC 891',},
-            NGC1055: {name: 'NGC 1055',},
-            NGC1432: {name: 'NGC 1432',},
-            NGC1435: {name: 'NGC 1435',},
-            NGC2023: {name: 'NGC 2023',},
-            NGC2070: {name: 'NGC 2070',},
-            NGC2169: {name: 'NGC 2169',},
-            NGC2175: {name: 'NGC 2175',},
-            NGC2204: {name: 'NGC 2204',},
-            NGC2237: {name: 'NGC 2237',},
-            NGC2238: {name: 'NGC 2238',},
-            NGC2239: {name: 'NGC 2239',},
-            NGC2244: {name: 'NGC 2244',},
-            NGC2246: {name: 'NGC 2246',},
-            NGC2264: {name: 'NGC 2264',},
-            NGC2349: {name: 'NGC 2349',},
-            NGC2360: {name: 'NGC 2360',},
-            NGC2362: {name: 'NGC 2362',},
-            NGC2403: {name: 'NGC 2403',},
-            NGC2419: {name: 'NGC 2419',},
-            NGC2438: {name: 'NGC 2438',},
-            NGC2451: {name: 'NGC 2451',},
-            NGC2477: {name: 'NGC 2477',},
-            NGC2516: {name: 'NGC 2516',},
-            NGC2546: {name: 'NGC 2546',},
-            NGC2547: {name: 'NGC 2547',},
-            NGC2903: {name: 'NGC 2903',},
-            NGC2976: {name: 'NGC 2976',},
-            NGC3077: {name: 'NGC 3077',},
-            NGC3115: {name: 'NGC 3115',},
-            NGC3228: {name: 'NGC 3228',},
-            NGC3293: {name: 'NGC 3293',},
-            NGC3372: {name: 'NGC 3372',},
-            NGC3532: {name: 'NGC 3532',},
-            NGC3628: {name: 'NGC 3628',},
-            NGC3766: {name: 'NGC 3766',},
-            NGC3953: {name: 'NGC 3953',},
-            NGC4565: {name: 'NGC 4565',},
-            NGC4571: {name: 'NGC 4571',},
-            NGC4631: {name: 'NGC 4631',},
-            NGC4656: {name: 'NGC 4656',},
-            NGC4755: {name: 'NGC 4755',},
-            NGC4833: {name: 'NGC 4833',},
-            NGC5128: {name: 'NGC 5128',},
-            NGC5139: {name: 'NGC 5139',},
-            NGC5195: {name: 'NGC 5195',},
-            NGC5281: {name: 'NGC 5281',},
-            NGC5662: {name: 'NGC 5662',},
-            NGC5907: {name: 'NGC 5907',},
-            NGC6025: {name: 'NGC 6025',},
-            NGC6124: {name: 'NGC 6124',},
-            NGC6231: {name: 'NGC 6231',},
-            NGC6242: {name: 'NGC 6242',},
-            NGC6397: {name: 'NGC 6397',},
-            NGC6530: {name: 'NGC 6530',},
-            NGC6543: {name: 'NGC 6543',},
-            NGC6603: {name: 'NGC 6603',},
-            NGC6633: {name: 'NGC 6633',},
-            NGC6712: {name: 'NGC 6712',},
-            NGC6819: {name: 'NGC 6819',},
-            NGC6822: {name: 'NGC 6822',},
-            NGC6866: {name: 'NGC 6866',},
-            NGC6946: {name: 'NGC 6946',},
-            NGC7000: {name: 'NGC 7000',},
-            NGC7009: {name: 'NGC 7009',},
-            NGC7293: {name: 'NGC 7293',},
-            NGC7331: {name: 'NGC 7331',},
-            NGC7380: {name: 'NGC 7380',},
-            NGC7479: {name: 'NGC 7479',},
-            NGC7789: {name: 'NGC 7789',},
-            IC10: {name: 'IC 10',},
-            IC349: {name: 'IC 349',},
-            IC434: {name: 'IC 434',},
-            IC1434: {name: 'IC 1434',},
-            IC2391: {name: 'IC 2391',},
-            IC2395: {name: 'IC 2395',},
-            IC2488: {name: 'IC 2488',},
-            IC2602: {name: 'IC 2602',},
-            IC4665: {name: 'IC 4665',},
-            IC5152: {name: 'IC 5152',},
-                */
+            // Interesting NGCobjects worth labeling (from SEDS)
+            NGC104: {name: 'NGC104',},
+            NGC188: {name: 'NGC188',},
+            NGC189: {name: 'NGC189',},
+            NGC206: {name: 'NGC206',},
+            NGC225: {name: 'NGC225',},
+            NGC253: {name: 'NGC253',},
+            NGC292: {name: 'NGC292',},
+            NGC381: {name: 'NGC381',},
+            NGC595: {name: 'NGC595',},
+            NGC604: {name: 'NGC604',},
+            NGC659: {name: 'NGC659',},
+            NGC752: {name: 'NGC752',},
+            NGC869: {name: 'NGC869',},
+            NGC884: {name: 'NGC884',},
+            NGC891: {name: 'NGC891',},
+            NGC1055: {name: 'NGC1055',},
+            NGC1432: {name: 'NGC1432',},
+            NGC1435: {name: 'NGC1435',},
+            NGC2023: {name: 'NGC2023',},
+            NGC2070: {name: 'NGC2070',},
+            NGC2169: {name: 'NGC2169',},
+            NGC2175: {name: 'NGC2175',},
+            NGC2204: {name: 'NGC2204',},
+            NGC2237: {name: 'NGC2237',},
+            NGC2238: {name: 'NGC2238',},
+            NGC2239: {name: 'NGC2239',},
+            NGC2244: {name: 'NGC2244',},
+            NGC2246: {name: 'NGC2246',},
+            NGC2264: {name: 'NGC2264',},
+            NGC2349: {name: 'NGC2349',},
+            NGC2360: {name: 'NGC2360',},
+            NGC2362: {name: 'NGC2362',},
+            NGC2403: {name: 'NGC2403',},
+            NGC2419: {name: 'NGC2419',},
+            NGC2438: {name: 'NGC2438',},
+            NGC2451: {name: 'NGC2451',},
+            NGC2477: {name: 'NGC2477',},
+            NGC2516: {name: 'NGC2516',},
+            NGC2546: {name: 'NGC2546',},
+            NGC2547: {name: 'NGC2547',},
+            NGC2903: {name: 'NGC2903',},
+            NGC2976: {name: 'NGC2976',},
+            NGC3077: {name: 'NGC3077',},
+            NGC3115: {name: 'NGC3115',},
+            NGC3228: {name: 'NGC3228',},
+            NGC3293: {name: 'NGC3293',},
+            NGC3372: {name: 'NGC3372',},
+            NGC3532: {name: 'NGC3532',},
+            NGC3628: {name: 'NGC3628',},
+            NGC3766: {name: 'NGC3766',},
+            NGC3953: {name: 'NGC3953',},
+            NGC4565: {name: 'NGC4565',},
+            NGC4571: {name: 'NGC4571',},
+            NGC4631: {name: 'NGC4631',},
+            NGC4656: {name: 'NGC4656',},
+            NGC4755: {name: 'NGC4755',},
+            NGC4833: {name: 'NGC4833',},
+            NGC5128: {name: 'NGC5128',},
+            NGC5139: {name: 'NGC5139',},
+            NGC5195: {name: 'NGC5195',},
+            NGC5281: {name: 'NGC5281',},
+            NGC5662: {name: 'NGC5662',},
+            NGC5907: {name: 'NGC5907',},
+            NGC6025: {name: 'NGC6025',},
+            NGC6124: {name: 'NGC6124',},
+            NGC6231: {name: 'NGC6231',},
+            NGC6242: {name: 'NGC6242',},
+            NGC6397: {name: 'NGC6397',},
+            NGC6530: {name: 'NGC6530',},
+            NGC6543: {name: 'NGC6543',},
+            NGC6603: {name: 'NGC6603',},
+            NGC6633: {name: 'NGC6633',},
+            NGC6712: {name: 'NGC6712',},
+            NGC6819: {name: 'NGC6819',},
+            NGC6822: {name: 'NGC6822',},
+            NGC6866: {name: 'NGC6866',},
+            NGC6946: {name: 'NGC6946',},
+            NGC7000: {name: 'NGC7000',},
+            NGC7009: {name: 'NGC7009',},
+            NGC7293: {name: 'NGC7293',},
+            NGC7331: {name: 'NGC7331',},
+            NGC7380: {name: 'NGC7380',},
+            NGC7479: {name: 'NGC7479',},
+            NGC7789: {name: 'NGC7789',},
+            IC10: {name: 'IC10',},
+            IC349: {name: 'IC349',},
+            IC434: {name: 'IC434',},
+            IC1434: {name: 'IC1434',},
+            IC2391: {name: 'IC2391',},
+            IC2395: {name: 'IC2395',},
+            IC2488: {name: 'IC2488',},
+            IC2602: {name: 'IC2602',},
+            IC4665: {name: 'IC4665',},
+            IC5152: {name: 'IC5152',},
 
         },
 

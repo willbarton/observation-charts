@@ -121,7 +121,7 @@
 }
 
 .constellation-label {
-    fill: rgba(0, 0, 0, 0.5); 
+    fill: rgba(0, 0, 0, 0.3); 
     font-family: "Trebuchet MS", Helvetica, sans-serif; 
     font-size: 80%; 
     letter-spacing: 0.2em;
