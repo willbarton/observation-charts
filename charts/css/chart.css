@@ -100,8 +100,12 @@
     font-family: "Trebuchet MS", Helvetica, sans-serif; 
     fill: rgba(35, 31, 32, 0.75);
 }
-.object-label { 
-    font-size: 80%;
+.galaxy-label,
+.opencluster-label,
+.globularcluster-label,
+.planetarynebula-label,
+.brightnebula-label { 
+    font-size: 75%;
     font-family: "Trebuchet MS", Helvetica, sans-serif; 
     font-style: italic;
     text-transform: uppercase;

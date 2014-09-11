@@ -139,7 +139,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             base.drawEcliptic();
 
             // Relax our labels
-            base.utils.relax();
+            // base.utils.relax();
         };
 
         // Draw labels for the given objects with the given css class
@@ -149,13 +149,11 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
             base.label_group.selectAll('text.' + cssClass)
                 .data(objects.filter(function(d) { 
-                    var path_defined = base.path(d) != undefined;
-                    var name_defined = base.data.overrides(d).hasOwnProperty("name");
-                    return path_defined && name_defined;
+                    return base.path(d) != undefined && base.data.overrides(d).hasOwnProperty("name");
                 }))
                 .enter().append('text')
                 .attr("id", function(d) { return d.properties.id + "-label"; })
-                .attr("class", cssClass)
+                .attr("class", cssClass + " label")
                 .style("text-anchor", "middle")
                 .attr("transform", function(d) { 
                     // The SVG coordinate system is from the top left
@@ -171,14 +169,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
                     return "translate(" + svgx + "," + svgy + ")rotate(" + angle + ")";
                 })
-                .text(function(d) { 
-                    var path_defined = base.path(d) != undefined;
-                    var name_defined = base.data.overrides(d).hasOwnProperty("name");
-                    console.log(path_defined && name_defined);
-                    
-                    // return d.properties.name;
-                    return base.data.overrides(d).name;
-                });
+                .text(function(d) { return base.data.overrides(d).name; });
 
         };
         
@@ -328,7 +319,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                             base.projection(d.geometry.coordinates)[1] + ')';
                     return transform;
                 });
-            base.drawLabelsForObjects(galaxies, 'object-label', 
+            base.drawLabelsForObjects(galaxies, 'galaxy-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - galaxyMajorScale(d.properties.size[0]) * 2; });
                     
@@ -354,7 +345,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
                 .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
                 .attr('r', function(d) { return openClusterMagnitudeScale(d.properties.magnitude); });
-            base.drawLabelsForObjects(openClusters, 'object-label', 
+            base.drawLabelsForObjects(openClusters, 'opencluster-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - openClusterMagnitudeScale(d.properties.magnitude) * 2; });
 
@@ -412,7 +403,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                                      d.properties.magnitude)]
                                  ]);
                     });
-            base.drawLabelsForObjects(globularClusters, 'object-label', 
+            base.drawLabelsForObjects(globularClusters, 'globularcluster-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - globularClusterMagnitudeScale(d.properties.magnitude) * 2; });
 
@@ -471,7 +462,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                                      d.properties.magnitude)]
                                  ]);
                     });
-            base.drawLabelsForObjects(planetaryNebulas, 'object-label', 
+            base.drawLabelsForObjects(planetaryNebulas, 'planetarynebula-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - planetaryNebulaMagnitudeScale(d.properties.magnitude) * 2; });
 
@@ -481,6 +472,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 return d.properties.type == 'Bright Nebula' && 
                     d.properties.magnitude <= base.options.brightnebulas.magnitude;
             });
+
             // We'll size the nebulas based on their magnitude, within our
             // min/max range.
             var brightNebulaMagnitudeScale = d3.scale.linear()
@@ -496,9 +488,9 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('y', function(d) { return base.projection(d.geometry.coordinates)[1]; })
                 .attr('height', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); })
                 .attr('width', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); });
-            base.drawLabelsForObjects(brightNebulas, 'object-label', 
-                    function(d) { return base.path.centroid(d)[0]; },
-                    function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) * 2; });
+            base.drawLabelsForObjects(brightNebulas, 'brightnebula-label', 
+                    function(d) { return base.path.centroid(d)[0] + brightNebulaMagnitudeScale(d.properties.magnitude) / 2; },
+                    function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) / 2; });
 
         };
 
@@ -734,6 +726,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             HIP30438: {name:'Canopus', },
             HIP7588:  {name:'Achernar', },
 
+                /*
             // Messier objects (in our catalog by their NGCnumbers)
             NGC1952: {name: 'M1',},
             NGC7089: {name: 'M2',},
@@ -940,7 +933,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             IC2602: {name: 'IC2602',},
             IC4665: {name: 'IC4665',},
             IC5152: {name: 'IC5152',},
-
+*/
         },
 
     };
