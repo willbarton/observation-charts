@@ -124,9 +124,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     .attr('class', 'graticule')
                     .attr('d', base.path);
             }
-                
-            // Load the constellations
-            d3.json('constellations.json', base.drawConstellations);
 
             // Load the star catalog
             d3.json('stars.json', base.drawStars);
@@ -134,8 +131,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // Load the object catalog
             d3.json('objects.json', base.drawObjects);
 
-            // Load the constellation catalog
-            // d3.json('consts.json', base.drawObjects);
+            // Load the constellations
+            d3.json('constellations.json', base.drawConstellations);
 
             // Draw chart features
             base.drawZenith();
@@ -143,7 +140,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
             // Relax our labels
             base.utils.relax();
-
         };
 
         // Draw labels for the given objects with the given css class
@@ -180,6 +176,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                             base.options.labels[d.properties.id].name : 
                             (d.properties.name ? d.properties.name : ''); 
                 });
+
         };
         
         base.drawZenith = function() {
@@ -232,21 +229,23 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         };
             
         base.drawConstellations = function(error, data) {
+            console.log("Drawing constellations");
             // Handle errors getting and parsing the data
             if (error) { console.log(error); return error; }
 
             base.const_group.selectAll('path.constellation').data(data.features)
                 .enter().append('path')
                 .attr('class', 'constellation')
-                .attr('d', function(d) { console.log(d); return base.path(d); });
+                .attr('d', base.path);
 
-            // base.drawLabelsForObjects(data, 'constellation-label', 
-            //         function(d) { return base.path.centroid(d)[0]; },
-            //         function(d) { return base.path.centroid(d)[1]; });
+            base.drawLabelsForObjects(data.features, 'constellation-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1]; });
 
         };
 
         base.drawStars = function(error, data) {
+            console.log("Drawing stars");
             // Handle errors getting and parsing the data
             if (error) { return error; }
 
@@ -281,6 +280,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         };
 
         base.drawObjects = function(error, data) {
+            console.log("Drawing objects");
             // Handle errors getting and parsing the data
             if (error) { return error; }
 
@@ -655,7 +655,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         galaxies: {
             magnitude: 8,
-            scale: [3, 10]
+            scale: [2, 8]
         },
         
         openclusters: {
@@ -820,6 +820,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             NGC205: {name: 'M110',},
 
             // Interesting NGC objects worth labeling (from SEDS)
+            /*
             NGC104: {name: 'NGC 104',},
             NGC188: {name: 'NGC 188',},
             NGC189: {name: 'NGC 189',},
@@ -914,6 +915,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             IC2602: {name: 'IC 2602',},
             IC4665: {name: 'IC 4665',},
             IC5152: {name: 'IC 5152',},
+                */
 
         },
 

@@ -76,7 +76,7 @@
 
 .constellation {
     fill: none; 
-    stroke-width: 0.96; 
+    stroke-width: 0.64; 
     stroke-linecap: butt; 
     stroke-linejoin: miter; 
     stroke: rgb(173,222,138); 
@@ -90,40 +90,41 @@
 }
 .ecliptic {
     fill: none;
-    stroke-width: 1.8; 
+    stroke-width: 0.96; 
     stroke: rgb(128,214,247);
 }
 
 /* Labels */
 .star-label { 
     font-size: 80%;
-    font-family: sans-serif;
+    font-family: "Trebuchet MS", Helvetica, sans-serif; 
     fill: rgba(35, 31, 32, 0.75);
 }
 .object-label { 
     font-size: 80%;
-    font-family: sans-serif;
+    font-family: "Trebuchet MS", Helvetica, sans-serif; 
     font-style: italic;
     text-transform: uppercase;
     fill: rgba(35, 31, 32, 0.75);
 }
 .zenith-label { 
     font-size: 80%;
-    font-family: sans-serif;
+    font-family: "Trebuchet MS", Helvetica, sans-serif; 
     text-transform: uppercase;
     fill: rgba(128, 214, 247, 0.5);
 }
 .ecliptic-label { 
     font-size: 80%;
-    font-family: sans-serif;
+    font-family: "Trebuchet MS", Helvetica, sans-serif; 
     text-transform: uppercase;
     fill: rgba(128, 214, 247, 0.5);
 }
 
 .constellation-label {
-    fill: black; 
-    font-family: "Trebuchet MS", Helvetica, Sans; 
-    font-size: 12px; 
+    fill: rgba(0, 0, 0, 0.5); 
+    font-family: "Trebuchet MS", Helvetica, sans-serif; 
+    font-size: 80%; 
+    letter-spacing: 0.2em;
     text-anchor: bottom; 
     dominant-baseline:top; 
     text-transform: uppercase; 
