@@ -64,27 +64,32 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             base.container = d3.select(base.el);
             base.svg = base.container.append('svg')
                 .attr('width', base.width + base.margin.left + base.margin.right)
-                .attr('height', base.height + base.margin.top + base.margin.bottom)
+                .attr('height', base.height + base.margin.top + base.margin.bottom);
 
             // Create our groups.
             base.lines_group = base.svg.append('g')
                 .attr('class', 'lines')
-                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
+                .style('pointer-events', 'none');
             base.chart_group = base.svg.append('g')
                 .attr('class', 'chart')
-                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
+                .style('pointer-events', 'none');
             base.const_group = base.svg.append('g')
                 .attr('class', 'constellations')
-                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
+                .style('pointer-events', 'none');
             base.obj_group = base.svg.append('g')
                 .attr('class', 'objects')
                 .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
             base.star_group = base.svg.append('g')
                 .attr('class', 'stars')
-                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
+                .style('pointer-events', 'none');
             base.label_group = base.svg.append('g')
                 .attr('class', 'labels')
-                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")");
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
+                .style('pointer-events', 'none');
             
             // Create and configure an instance of the orthographic projection
             base.projection = d3.geo.stereographic()
@@ -100,13 +105,28 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // Create and configure the geographic path generator
             base.path = d3.geo.path().projection(base.projection);
             
+
+            base.draw();
+        };
+
+        base.draw = function() {
+            // Load the star catalog
+            d3.json('stars.json', base.drawStars);
+
+            // Load the object catalog
+            d3.json('objects.json', base.drawObjects);
+
+            // Load the constellations
+            d3.json('constellations.json', base.drawConstellations);
+
             // Overlay
             base.overlay = base.svg.selectAll('circle').data([base.rotate])
                 .enter().append('circle')
                 .attr('transform', 'translate(' + [base.width / 2, base.height / 2] + ')')
                 .attr('r', base.width / 2)
                 .attr('filter', 'url(#lightMe)')
-                .attr('class', 'overlay');
+                .attr('class', 'overlay')
+                .style('pointer-events', 'none');
 
             // Globe Outline
             base.globe = base.lines_group.selectAll('path.globe').data([{type: 'Sphere'}])
@@ -124,30 +144,19 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     .attr('class', 'graticule')
                     .attr('d', base.path);
             }
-
-            // Load the star catalog
-            d3.json('stars.json', base.drawStars);
-
-            // Load the object catalog
-            d3.json('objects.json', base.drawObjects);
-
-            // Load the constellations
-            d3.json('constellations.json', base.drawConstellations);
-
+            
             // Draw chart features
             base.drawZenith();
             base.drawEcliptic();
 
-            // Relax our labels
-            // base.utils.relax();
-        };
+        }
 
         // Draw labels for the given objects with the given css class
         // and with the given functions for calculating dx and dy.
         base.drawLabelsForObjects = function(objects, cssClass, x, y) {
             var center_projected = base.path.centroid(base.utils.zenithFeature());
 
-            base.label_group.selectAll('text.' + cssClass)
+            var labelElements = base.label_group.selectAll('text.' + cssClass)
                 .data(objects.filter(function(d) { 
                     return base.path(d) != undefined && base.data.overrides(d).hasOwnProperty("name");
                 }))
@@ -170,6 +179,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     return "translate(" + svgx + "," + svgy + ")rotate(" + angle + ")";
                 })
                 .text(function(d) { return base.data.overrides(d).name; });
+
+            return labelElements;
 
         };
         
@@ -292,7 +303,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // ellipse.
             var galaxies = $.grep(data.features, function(d) {
                 return d.properties.type == 'Galaxy' && 
-                    d.properties.magnitude <= base.options.galaxies.magnitude;
+                    d.properties.magnitude <= base.options.galaxies.magnitude &&
+                    base.path(d) != undefined;
             });
             // We'll size galaxies based on their size, within our
             // min/max range.
@@ -304,8 +316,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .domain(d3.extent(galaxies, function(d) {
                     return d3.min(d.properties.size); }))
                 .range(base.options.galaxies.scale);
-            base.obj_group.selectAll('ellipse.galaxy')
-                .data(galaxies.filter(function(d) { return base.path(d) != undefined; }))
+            var galaxyElms = base.obj_group.selectAll('ellipse.galaxy')
+                .data(galaxies)
                 .enter().append('ellipse')
                 .attr("id", function(d) { return d.properties.id; })
                 .attr('class', 'galaxy')
@@ -319,9 +331,15 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                             base.projection(d.geometry.coordinates)[1] + ')';
                     return transform;
                 });
-            base.drawLabelsForObjects(galaxies, 'galaxy-label', 
+            var galaxyLabels = base.drawLabelsForObjects(galaxies, 'galaxy-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - galaxyMajorScale(d.properties.size[0]) * 2; });
+            if (base.options.galaxies.labelhover) {
+                galaxyLabels.style('visibility', 'hidden');
+                galaxyElms
+                    .on('mouseover', base.toggleLabel)
+                    .on('mouseout', base.toggleLabel);
+            }
                     
             // Open Clusters
             // -----
@@ -329,7 +347,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // to indicate its openness; an SVG circle.
             var openClusters = $.grep(data.features, function(d) {
                 return d.properties.type == 'Open Cluster' && 
-                    d.properties.magnitude <= base.options.openclusters.magnitude;
+                    d.properties.magnitude <= base.options.openclusters.magnitude &&
+                    base.path(d) != undefined;
             });
             // We'll size clusters based on their magnitude, within our
             // min/max range.
@@ -337,17 +356,23 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .domain(d3.extent(openClusters, function(d) {
                     return d.properties.magnitude; }))
                 .range(base.options.openclusters.scale);
-            base.obj_group.selectAll('circle.open-cluster')
-                .data(openClusters.filter(function(d) { return base.path(d) != undefined; }))
+            var openClusterElms = base.obj_group.selectAll('circle.open-cluster')
+                .data(openClusters)
                 .enter().append('circle')
                 .attr("id", function(d) { return d.properties.id; })
                 .attr('class', 'open-cluster')
                 .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
                 .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
                 .attr('r', function(d) { return openClusterMagnitudeScale(d.properties.magnitude); });
-            base.drawLabelsForObjects(openClusters, 'opencluster-label', 
+            var openClusterLabels = base.drawLabelsForObjects(openClusters, 'opencluster-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - openClusterMagnitudeScale(d.properties.magnitude) * 2; });
+            if (base.options.globularclusters.labelhover) {
+                openClusterLabels.style('visibility', 'hidden');
+                openClusterElms
+                    .on('mouseover', base.toggleLabel)
+                    .on('mouseout', base.toggleLabel);
+            }
 
             // Globular Clusters
             // -----
@@ -355,7 +380,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // and one horizontal line; a circle and two paths.
             var globularClusters = $.grep(data.features, function(d) {
                 return d.properties.type == 'Globular Cluster' && 
-                    d.properties.magnitude <= base.options.globularclusters.magnitude;
+                    d.properties.magnitude <= base.options.globularclusters.magnitude &&
+                    base.path(d) != undefined;
             });
             // We'll size clusters based on their magnitude, within our
             // min/max range.
@@ -364,7 +390,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     return d.properties.magnitude; }))
                 .range(base.options.globularclusters.scale);
             var globularClusterElms = base.obj_group.selectAll('g.globular-cluster')
-                .data(globularClusters.filter(function(d) { return base.path(d) != undefined; }))
+                .data(globularClusters)
                 .enter().append('g')
                     .attr("id", function(d) { return d.properties.id; })
                     .attr('class', 'globular-cluster');
@@ -403,10 +429,16 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                                      d.properties.magnitude)]
                                  ]);
                     });
-            base.drawLabelsForObjects(globularClusters, 'globularcluster-label', 
+            var globularClusterLabels = base.drawLabelsForObjects(globularClusters, 'globularcluster-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - globularClusterMagnitudeScale(d.properties.magnitude) * 2; });
-
+            if (base.options.globularclusters.labelhover) {
+                globularClusterLabels.style('visibility', 'hidden');
+                globularClusterElms
+                    .on('mouseover', base.toggleLabel)
+                    .on('mouseout', base.toggleLabel);
+            }
+            
 
             // Planetary Nebulas
             // -----
@@ -414,7 +446,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // and one horizontal line; a circle and two paths.
             var planetaryNebulas = $.grep(data.features, function(d) {
                 return d.properties.type == 'Planetary Nebula' && 
-                    d.properties.magnitude <= base.options.planetarynebulas.magnitudes;
+                    d.properties.magnitude <= base.options.planetarynebulas.magnitudes &&
+                    base.path(d) != undefined;
             });
             // We'll size the nebulas based on their magnitude, within our
             // min/max range.
@@ -423,7 +456,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     return d.properties.magnitude; }))
                 .range(base.options.planetarynebulas.scale);
             var planetaryNebulaElms = base.obj_group.selectAll('g.planetary-nebula')
-                .data(planetaryNebulas.filter(function(d) { return base.path(d) != undefined; }))
+                .data(planetaryNebulas)
                 .enter().append('g')
                     .attr("id", function(d) { return d.properties.id; })
                     .attr('class', 'planetary-nebula');
@@ -462,15 +495,23 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                                      d.properties.magnitude)]
                                  ]);
                     });
-            base.drawLabelsForObjects(planetaryNebulas, 'planetarynebula-label', 
+            var planetaryNebulaLabels = base.drawLabelsForObjects(planetaryNebulas, 'planetarynebula-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - planetaryNebulaMagnitudeScale(d.properties.magnitude) * 2; });
+            if (base.options.planetarynebulas.labelhover) {
+                planetaryNebulaLabels.style('visibility', 'hidden');
+                planetaryNebulaElms
+                    .on('mouseover', base.toggleLabel)
+                    .on('mouseout', base.toggleLabel);
+            }
+            
 
             // Bright Nebulas
             // -----
             var brightNebulas = $.grep(data.features, function(d) {
                 return d.properties.type == 'Bright Nebula' && 
-                    d.properties.magnitude <= base.options.brightnebulas.magnitude;
+                    d.properties.magnitude <= base.options.brightnebulas.magnitude &&
+                    base.path(d) != undefined;
             });
 
             // We'll size the nebulas based on their magnitude, within our
@@ -479,8 +520,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .domain(d3.extent(brightNebulas, function(d) {
                     return d.properties.magnitude; }))
                 .range(base.options.brightnebulas.scale);
-            base.obj_group.selectAll('circle.bright-nebula')
-                .data(brightNebulas.filter(function(d) { return base.path(d) != undefined; }))
+            var brightNebulaElms = base.obj_group.selectAll('rect.bright-nebula')
+                .data(brightNebulas)
                 .enter().append('rect')
                 .attr("id", function(d) { return d.properties.id; })
                 .attr('class', 'bright-nebula')
@@ -488,11 +529,30 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('y', function(d) { return base.projection(d.geometry.coordinates)[1]; })
                 .attr('height', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); })
                 .attr('width', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); });
-            base.drawLabelsForObjects(brightNebulas, 'brightnebula-label', 
+
+
+            var brightNebulaLabels = base.drawLabelsForObjects(brightNebulas, 'brightnebula-label', 
                     function(d) { return base.path.centroid(d)[0] + brightNebulaMagnitudeScale(d.properties.magnitude) / 2; },
                     function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) / 2; });
 
+            if (base.options.brightnebulas.labelhover) {
+                brightNebulaLabels.style('visibility', 'hidden');
+                brightNebulaElms
+                    .on('mouseover', base.toggleLabel)
+                    .on('mouseout', base.toggleLabel);
+            }
+
         };
+
+        // Toggle the visibility of a label for a given feature
+        base.toggleLabel = function(data) {
+            var label = base.svg.select('#' + data.properties.id + '-label')
+            if (label.style('visibility') == 'hidden') {
+                label.style('visibility', 'visible'); 
+            } else if (label.style('visibility') == 'visible') {
+                label.style('visibility', 'hidden'); 
+            }
+        }
 
         base.data = {};
 
@@ -662,37 +722,43 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         stars: {
             magnitude: 5,
             scale: [6, 0.25],
-            labelAll: false
+            labelall: false,
+            labelhover: false
         },
 
         galaxies: {
             magnitude: 8,
             scale: [2, 8],
-            labelAll: false
+            labelall: true,
+            labelhover: true
         },
         
         openclusters: {
             magnitude: 6,
             scale: [6,3],
-            labelAll: false
+            labelall: true,
+            labelhover: true
         },
 
         globularclusters: {
             magnitude: 8,
             scale: [8,4],
-            labelAll: false
+            labelall: true,
+            labelhover: true
         },
 
         planetarynebulas: {
             magnitude: 10,
             scale: [12,6],
-            labelAll: false
+            labelall: true,
+            labelhover: true
         },
 
         brightnebulas: {
             magnitude: 10,
             scale: [12,6],
-            labelAll: true
+            labelall: true,
+            labelhover: true
         },
 
         // Override settings/label for any given object
@@ -726,7 +792,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             HIP30438: {name:'Canopus', },
             HIP7588:  {name:'Achernar', },
 
-                /*
             // Messier objects (in our catalog by their NGCnumbers)
             NGC1952: {name: 'M1',},
             NGC7089: {name: 'M2',},
@@ -933,7 +998,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             IC2602: {name: 'IC2602',},
             IC4665: {name: 'IC4665',},
             IC5152: {name: 'IC5152',},
-*/
+
         },
 
     };
