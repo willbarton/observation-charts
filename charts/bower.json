@@ -3,7 +3,8 @@
   "dependencies": {
     "bootstrap": "~3",
     "jquery": "~2.1.0",
-    "d3": "~3.4"
+    "d3": "~3.4",
+    "datejs": "~1.0.0-rc1"
   },
   "version": "0.1",
   "authors": [

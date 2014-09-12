@@ -39,23 +39,21 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // To avoid scope issues, use 'base' instead of 'this'
         // to reference this class from internal events and functions.
         var base = this;
-
-        // Access to jQuery and DOM versions of element
-        base.$el = $(el);
         base.el = el;
 
-        // Add a reverse reference to the DOM object
-        base.$el.data("ObservationChart", base);
-        
         // Store the current rotation
         base.rotate = {x: 0, y: 90};
 
         // Store the basic margins
-        base.margin = {top: 20, right: 10, bottom: 20, left: 10};
+        base.margin = {top: 20, right: 20, bottom: 20, left: 20};
 
         // Initialization
         base.init = function(){
             base.options = $.extend({},ObservationChart.defaultOptions, options);
+
+            base.datetime = base.options.date;
+            if (base.options.time != undefined)
+                base.datetime.setHours(base.options.time, 0, 0, 0);
 
             base.width = base.options.size.width - base.margin.left - base.margin.right;
             base.height = base.options.size.height - base.margin.top - base.margin.bottom;
@@ -148,6 +146,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // Draw chart features
             base.drawZenith();
             base.drawEcliptic();
+            base.drawInformation();
 
         }
 
@@ -158,13 +157,13 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
             var labelElements = base.label_group.selectAll('text.' + cssClass)
                 .data(objects.filter(function(d) { 
-                    return base.path(d) != undefined && base.data.overrides(d).hasOwnProperty("name");
+                    return base.path(d) != undefined && base.data.overrides(d).hasOwnProperty('name');
                 }))
                 .enter().append('text')
-                .attr("id", function(d) { return d.properties.id + "-label"; })
-                .attr("class", cssClass + " label")
-                .style("text-anchor", "middle")
-                .attr("transform", function(d) { 
+                .attr('id', function(d) { return d.properties.id + '-label'; })
+                .attr('class', cssClass + ' label')
+                .style('text-anchor', 'middle')
+                .attr('transform', function(d) { 
                     // The SVG coordinate system is from the top left
                     // corner of the image. For calculating theta, we
                     // need the origin to be in the center of the image
@@ -176,7 +175,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     var angle = Math.atan(projy / projx) / PI_OVER_180;
                     angle = 0;
 
-                    return "translate(" + svgx + "," + svgy + ")rotate(" + angle + ")";
+                    return 'translate(' + svgx + ',' + svgy + ')rotate(' + angle + ')';
                 })
                 .text(function(d) { return base.data.overrides(d).name; });
 
@@ -191,9 +190,9 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .enter().append('path')
                 .attr('class', 'zenith')
                 .attr('d', base.path);
-            // base.drawLabelsForObjects(feature, 'zenith-label', 
-            //         function(d) { return base.path.centroid(d)[0]; },
-            //         function(d) { return base.path.centroid(d)[1] + 15; });
+            base.drawLabelsForObjects(feature, 'zenith-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] + 15; });
         };
 
         base.drawEcliptic = function() {
@@ -232,9 +231,81 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             //         function(d) { return base.path.centroid(d)[1]; });
 
         };
+
+        // Draw labels on the map for North, South, East, and West, and
+        // the latitude/longitude date and time if they're applicable.
+        base.drawInformation = function() {
+
+            base.chart_group
+                .append('text')
+                .attr('class', 'chartinfo-label')
+                .style('text-anchor', 'middle')
+                .attr('transform', function(d) { 
+                    return 'translate(' + (base.width/2) + ',' + base.margin.top + ')';
+                })
+                .text('N')
+            base.chart_group
+                .append('text')
+                .attr('class', 'chartinfo-label')
+                .style('text-anchor', 'middle')
+                .attr('transform', function(d) { 
+                    return 'translate(' + (base.width/2) + ',' + (base.height - base.margin.top) + ')';
+                })
+                .text('S')
+            base.chart_group
+                .append('text')
+                .attr('class', 'chartinfo-label')
+                .style('text-anchor', 'middle')
+                .attr('transform', function(d) { 
+                    return 'translate(' + (base.width - base.margin.left) + ',' + (base.height/2) + ')';
+                })
+                .text('E')
+            base.chart_group
+                .append('text')
+                .attr('class', 'chartinfo-label')
+                .style('text-anchor', 'middle')
+                .attr('transform', function(d) { 
+                    return 'translate(' + base.margin.left + ',' + (base.height/2) + ')';
+                })
+                .text('W')
+            
+
+            // If we're set to a specific center ra/dec, we're not going
+            // to draw labels at this time.
+            if(base.options.center)
+                return;
+
+            var latstring = (base.options.location.latitude > 0) ? 
+                            base.options.location.latitude + ' N ' :
+                            -1 * base.options.location.latitude + ' S ';
+            var lonstring = (base.options.location.longitude> 0) ? 
+                            base.options.location.longitude + ' E ' :
+                            -1 * base.options.location.longitude + ' W '; 
+            var locstring = latstring + lonstring;
+            var datestring = base.datetime.toString('h:mm tt MMM d, yyyy');
+            
+            base.chart_group
+                .append('text')
+                .attr('class', 'chartinfo-label')
+                .style('text-anchor', 'left')
+                .style('font-size', '12px')
+                .attr('transform', function(d) { 
+                    return 'translate(' + base.margin.left + ',' + base.margin.top + ')';
+                })
+                .text(locstring)
+            base.chart_group
+                .append('text')
+                .attr('class', 'chartinfo-label')
+                .style('text-anchor', 'right')
+                .style('font-size', '12px')
+                .attr('transform', function(d) { 
+                    return 'translate(' + base.margin.left + ',' + (base.margin.top + 16) + ')';
+                })
+                .text(datestring)
+
+        };
             
         base.drawConstellations = function(error, data) {
-            console.log("Drawing constellations");
             // Handle errors getting and parsing the data
             if (error) { console.log(error); return error; }
 
@@ -250,7 +321,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         };
 
         base.drawStars = function(error, data) {
-            console.log("Drawing stars");
             // Handle errors getting and parsing the data
             if (error) { return error; }
 
@@ -285,7 +355,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         };
 
         base.drawObjects = function(error, data) {
-            console.log("Drawing objects");
             // Handle errors getting and parsing the data
             if (error) { return error; }
 
@@ -311,11 +380,11 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             var galaxyMajorScale = d3.scale.linear()
                 .domain(d3.extent(galaxies, function(d) {
                     return d3.max(d.properties.size); }))
-                .range(base.options.galaxies.scale);
+                .range(base.options.galaxies.majorscale);
             var galaxyMinorScale = d3.scale.linear()
                 .domain(d3.extent(galaxies, function(d) {
                     return d3.min(d.properties.size); }))
-                .range(base.options.galaxies.scale);
+                .range(base.options.galaxies.minorscale);
             var galaxyElms = base.obj_group.selectAll('ellipse.galaxy')
                 .data(galaxies)
                 .enter().append('ellipse')
@@ -618,7 +687,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         
         // Julian Day
         base.utils.julianDay = function(date) {
-            if(!date) date = base.options.datetime;
+            if(!date) date = base.options.date;
             return ( date.getTime() / 86400000.0 ) + 2440587.5;
         };
 
@@ -626,7 +695,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // Greenwich Mean Sidereal Time, based on http://aa.usno.navy.mil/faq/docs/GAST.php
         // and http://community.dur.ac.uk/john.lucey/users/lst.html
         base.utils.greenwichMeanSiderealTime = function(date) {
-            if(!date) date = base.options.datetime;
+            if(!date) date = base.datetime;
 
             var JD = base.utils.julianDay(date);
             var MJD = JD - 2400000.5;		
@@ -641,7 +710,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // Local Sidereal Time, based on http://aa.usno.navy.mil/faq/docs/GAST.php
         // and http://community.dur.ac.uk/john.lucey/users/lst.html
         base.utils.localSiderealTime = function(date, lon) {
-            if(!date) date = base.options.datetime;
+            if(!date) date = base.datetime;
             if(!lon) lon = base.options.location.longitude;
 
             function frac(x) {
@@ -656,12 +725,11 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         base.utils.zenith = function() {
             if(!base.options.center) {
-                var date = base.options.datetime;
+                var date = base.datetime;
                 var location = base.options.location;
                 var dec = -1 * location.latitude;
                 var ra = base.utils.localSiderealTime() * 15;
 
-                // console.log("center", [ra, dec]);
                 return [ra, dec];
             }
             return [base.options.center.ra * 15, -1 * base.options.center.dec];
@@ -699,7 +767,11 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         graticule: true,
 
         // The date to be charted. Defaults to 'now'.
-        datetime: new Date(),
+        date: new Date(),
+
+        // If you want a specific hour on whatever date 'today' happens
+        // to be, set it here
+        time: 21,
 
         // The location from which the sky is observered
         location: {
@@ -728,7 +800,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         galaxies: {
             magnitude: 8,
-            scale: [2, 8],
+            majorscale: [4, 8],
+            minorscale: [2, 4],
             labelall: true,
             labelhover: true
         },
@@ -742,7 +815,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         globularclusters: {
             magnitude: 8,
-            scale: [8,4],
+            scale: [6,4],
             labelall: true,
             labelhover: true
         },
@@ -756,7 +829,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         brightnebulas: {
             magnitude: 10,
-            scale: [12,6],
+            scale: [10,6],
             labelall: true,
             labelhover: true
         },
