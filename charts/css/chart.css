@@ -87,6 +87,10 @@
 /* Chart features */
 .zenith {
     fill: rgb(128,214,247);
+    stroke: rgb(128,214,247);
+}
+.zenith path {
+    stroke: rgb(128,214,247);
 }
 .ecliptic {
     fill: none;

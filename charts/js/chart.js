@@ -84,14 +84,18 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('class', 'stars')
                 .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
                 .style('pointer-events', 'none');
+            base.solarsystem_group = base.svg.append('g')
+                .attr('class', 'solarsystem')
+                .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
+                .style('pointer-events', 'none');
             base.label_group = base.svg.append('g')
                 .attr('class', 'labels')
                 .attr("transform", "translate(" + base.margin.left + "," + base.margin.top + ")")
                 .style('pointer-events', 'none');
-            
+
             // Create and configure an instance of the orthographic projection
             base.projection = d3.geo.stereographic()
-                .scale(base.width * base.options.scale)
+                .scale(base.width * (base.options.scale/2))
                 .translate([base.width / 2, base.height / 2])
                 .clipAngle(90)
                 .rotate([base.rotate.x / 2, -base.rotate.y / 2]);
@@ -102,36 +106,58 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
             // Create and configure the geographic path generator
             base.path = d3.geo.path().projection(base.projection);
-            
 
             base.draw();
+
+            // Set up zooming
+            if (base.options.zoom) {
+                base.zoom = d3.behavior.zoom()
+                    .translate([0, 0])
+                    .scale(base.options.scale)
+                    .scaleExtent([base.options.scale, base.options.zoom.extent])
+                    .size([base.width, base.height])
+                    .on("zoom", function() {
+                        var transform_attr = "translate(" + (d3.event.translate[0] + base.margin.left) + "," + (d3.event.translate[1] + base.margin.top) + ")scale(" + d3.event.scale + ")";
+
+                        base.lines_group.attr("transform", transform_attr);
+                        base.chart_group.attr("transform", transform_attr);
+                        base.const_group.attr("transform", transform_attr);
+                        base.obj_group.attr("transform", transform_attr);
+                        base.star_group.attr("transform", transform_attr);
+                        base.solarsystem_group.attr("transform", transform_attr);
+                        base.label_group.attr("transform", transform_attr);
+                    });
+                base.svg.call(base.zoom);
+            }
+
         };
 
         base.draw = function() {
-            // Load the star catalog
-            d3.json('stars.json', base.drawStars);
-
-            // Load the object catalog
-            d3.json('objects.json', base.drawObjects);
-
-            // Load the constellations
-            d3.json('constellations.json', base.drawConstellations);
-
-            // Overlay
-            base.overlay = base.svg.selectAll('circle').data([base.rotate])
-                .enter().append('circle')
-                .attr('transform', 'translate(' + [base.width / 2, base.height / 2] + ')')
-                .attr('r', base.width / 2)
-                .attr('filter', 'url(#lightMe)')
-                .attr('class', 'overlay')
-                .style('pointer-events', 'none');
+            console.log("drawing");
 
             // Globe Outline
             base.globe = base.lines_group.selectAll('path.globe').data([{type: 'Sphere'}])
                 .enter().append('path')
                 .attr('class', 'globe')
                 .attr('d', base.path);
+            
+            // Draw other chart features
+            base.drawZenith();
+            base.drawEcliptic();
+            base.drawInformation();
+            
+            // Load the constellations
+            d3.json('constellations.json', base.drawConstellations);
 
+            // Load the object catalog
+            d3.json('objects.json', base.drawObjects);
+            
+            // Load the star catalog
+            d3.json('stars.json', base.drawStars);
+
+            // Draw the solar System
+            base.drawSolarSystem();
+            
             // Graticule
             base.graticule = d3.geo.graticule();
 
@@ -142,12 +168,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     .attr('class', 'graticule')
                     .attr('d', base.path);
             }
-            
-            // Draw chart features
-            base.drawZenith();
-            base.drawEcliptic();
-            base.drawInformation();
-
+                
         }
 
         // Draw labels for the given objects with the given css class
@@ -186,13 +207,37 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         base.drawZenith = function() {
             var feature = [base.utils.zenithFeature()];
             base.path.pointRadius(2);
-            base.chart_group.selectAll('path.zenith').data(feature)
-                .enter().append('path')
-                .attr('class', 'zenith')
-                .attr('d', base.path);
-            base.drawLabelsForObjects(feature, 'zenith-label', 
-                    function(d) { return base.path.centroid(d)[0]; },
-                    function(d) { return base.path.centroid(d)[1] + 15; });
+            
+            // base.chart_group.selectAll('path.zenith').data(feature)
+            //     .enter().append('path')
+            //     .attr('class', 'zenith')
+            //     .attr('d', base.path);
+
+            var zenithElm = base.obj_group.selectAll('g.zenith')
+                .data(feature)
+                .enter().append('g')
+                    .attr('id', 'zenith')
+                    .attr('class', 'zenith');
+            zenithElm.append('path')
+                    .attr('d', function(d) {
+                        var coords = [base.projection(d.geometry.coordinates)[0],
+                            base.projection(d.geometry.coordinates)[1]];
+                        return base.utils.lineFunction([
+                                [coords[0]-base.options.zenith.size, coords[1]],
+                                [coords[0]+base.options.zenith.size, coords[1]]]);
+                    });
+            zenithElm.append('path')
+                    .attr('d', function(d) {
+                        var coords = [base.projection(d.geometry.coordinates)[0],
+                            base.projection(d.geometry.coordinates)[1]];
+                        return base.utils.lineFunction([
+                                [coords[0],coords[1]-base.options.zenith.size],
+                                [coords[0],coords[1]+base.options.zenith.size]]);
+                    });
+            
+            // base.drawLabelsForObjects(feature, 'zenith-label', 
+            //         function(d) { return base.path.centroid(d)[0]; },
+            //         function(d) { return base.path.centroid(d)[1] + 15; });
         };
 
         base.drawEcliptic = function() {
@@ -259,7 +304,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('transform', function(d) { 
                     return 'translate(' + (base.width - base.margin.left) + ',' + (base.height/2) + ')';
                 })
-                .text('E')
+                .text('W')
             base.chart_group
                 .append('text')
                 .attr('class', 'chartinfo-label')
@@ -267,7 +312,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('transform', function(d) { 
                     return 'translate(' + base.margin.left + ',' + (base.height/2) + ')';
                 })
-                .text('W')
+                .text('E')
             
 
             // If we're set to a specific center ra/dec, we're not going
@@ -302,6 +347,38 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     return 'translate(' + base.margin.left + ',' + (base.margin.top + 16) + ')';
                 })
                 .text(datestring)
+
+        };
+
+        base.drawSolarSystem = function() {
+            //http://www.stjarnhimlen.se/comp/ppcomp.html
+
+            // Sun
+            var sunFeature = base.utils.sunFeature();
+            base.path.pointRadius(function(d) { return 20; });
+            base.solarsystem_group.selectAll('path.star')
+                .data([sunFeature])
+                .enter().append('path')
+                .attr('class', 'star')
+                .attr('id', 'sun')
+                .attr('d', base.path);
+            base.drawLabelsForObjects([sunFeature], 'sun-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - 30; });
+
+            // Moon 
+            var moonFeature = base.utils.moonFeature();
+            base.path.pointRadius(function(d) { return 8; });
+            base.solarsystem_group.selectAll('path.planetary')
+                .data([moonFeature])
+                .enter().append('path')
+                .attr('class', 'planetary')
+                .attr('id', 'moon')
+                .attr('d', base.path);
+            base.drawLabelsForObjects([moonFeature], 'moon-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - 12; });
+            
 
         };
             
@@ -357,13 +434,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         base.drawObjects = function(error, data) {
             // Handle errors getting and parsing the data
             if (error) { return error; }
-
-            // Generate a D3 line function that we'll use for the
-            // planetary nebula and globular cluster symbols.
-            var lineFunction = d3.svg.line()
-                .x(function(d) { return d[0]; })
-                .y(function(d) { return d[1]; })
-                .interpolate("linear");
 
             // Galaxies
             // -----
@@ -473,7 +543,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                             base.projection(d.geometry.coordinates)[0],
                             base.projection(d.geometry.coordinates)[1]
                         ];
-                        var line = lineFunction([
+                        var line = base.utils.lineFunction([
                                 [coords[0]-globularClusterMagnitudeScale(
                                     d.properties.magnitude),
                                  coords[1]],
@@ -489,7 +559,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                             base.projection(d.geometry.coordinates)[0],
                             base.projection(d.geometry.coordinates)[1]
                         ];
-                        return lineFunction([
+                        return base.utils.lineFunction([
                                 [coords[0],
                                  coords[1]-globularClusterMagnitudeScale(
                                      d.properties.magnitude)],
@@ -539,7 +609,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                             base.projection(d.geometry.coordinates)[0],
                             base.projection(d.geometry.coordinates)[1]
                         ];
-                        var line = lineFunction([
+                        var line = base.utils.lineFunction([
                                 [coords[0]-planetaryNebulaMagnitudeScale(
                                     d.properties.magnitude),
                                  coords[1]],
@@ -555,7 +625,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                             base.projection(d.geometry.coordinates)[0],
                             base.projection(d.geometry.coordinates)[1]
                         ];
-                        return lineFunction([
+                        return base.utils.lineFunction([
                                 [coords[0],
                                  coords[1]-planetaryNebulaMagnitudeScale(
                                      d.properties.magnitude)],
@@ -640,6 +710,14 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // ----
         base.utils = {};
 
+        // Generate a D3 line function that we'll use for the
+        // planetary nebula and globular cluster symbols.
+        base.utils.lineFunction = d3.svg.line()
+            .x(function(d) { return d[0]; })
+            .y(function(d) { return d[1]; })
+            .interpolate("linear");
+    
+
         // Constraint relaxation for labels
         base.utils.alpha = 0.5;
         base.utils.spacing = 12;
@@ -723,6 +801,118 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             return LMST;
         };
 
+
+
+        base.utils.sun = function(date) {
+            if(!date) date = base.datetime;
+
+            var JD = base.utils.julianDay(date);
+            var D = JD-2455196.5;
+            var eg = 279.557208;
+            var wg = 283.112438;
+            var e = 0.016705;
+
+            var N = ((360/365.242191) * D) % 360;
+            if (N < 0)
+                N += 360;
+
+            var Mo = (N + eg - wg) % 360;
+            if (Mo < 0)
+                Mo += 360;
+
+            var v = Mo + (360/Math.PI) * e * Math.sin(Mo * Math.PI/180);
+            var lon = v + wg;
+            if (lon > 360)
+                lon -= 360;
+
+            var lat = 0;
+
+            return {lat:lat, lon:lon, Mo:Mo, D:D, N:N};
+        }
+
+        base.utils.sunFeature = function() {
+            var coords = base.utils.sun();
+            var sun_feature = { 
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point", 
+                    "coordinates": [360 - coords.lon, -1 * coords.lat]
+                },
+                "properties": {
+                    "name": "Sun", 
+                    "id": "sun",
+                    "magnitude": -26.74
+                }
+            };
+            return sun_feature;
+        }; 
+
+
+        base.utils.moon = function(date) {
+            if(!date) date = base.datetime;
+
+            var JD = base.utils.julianDay(date);
+            var sun = base.utils.sun(date);
+            var lo = 91.929336;
+            var Po = 130.143076;
+            var No = 291.682547;
+            var i = 5.145396;
+            var e =  0.0549;
+
+            var l = (13.1763966 * sun.D + lo) % 360;
+            if (l < 0)
+                l += 360;
+
+            var Mm = (l - 0.1114041 * sun.D - Po) % 360;
+            if (Mm < 0)
+                Mm += 360;
+
+            var N = (No - 0.0529539 * sun.D) % 360;
+            if (N < 0)
+                N += 360;
+
+            var C = l - sun.lon;
+            var Ev = 1.2739 * Math.sin((2 * C - Mm) * PI_OVER_180);
+            var sinMo = Math.sin(sun.Mo * PI_OVER_180);
+            var Ae = 0.1858 * sinMo;
+            var A3 = 0.37 * sinMo;
+            var Mprimem = Mm + Ev - Ae - A3;
+            var Ec = 6.2886 * Math.sin(Mprimem * PI_OVER_180);
+            var A4 = 0.214*Math.sin(2 * Mprimem * PI_OVER_180);
+            var lprime = l + Ev + Ec -Ae + A4;
+            var V = 0.6583 * Math.sin(2 * (lprime - sun.lon) * PI_OVER_180);
+            var lprimeprime = lprime + V;
+            var Nprime =N - 0.16 * sinMo;
+            var lppNp = (lprimeprime-Nprime) * PI_OVER_180;
+            var sinlppNp = Math.sin(lppNp);
+            var y = sinlppNp * Math.cos(i * PI_OVER_180);
+            var x = Math.cos(lppNp);
+
+            var lm = Math.atan2(y, x)/PI_OVER_180 + Nprime; 
+            var Bm = Math.asin(sinlppNp * Math.sin(i * PI_OVER_180)) / PI_OVER_180;
+            if (lm > 360)
+                lm -= 360;
+
+            return [Bm, lm];
+        }
+
+        base.utils.moonFeature = function() {
+            var coords = base.utils.moon();
+            var moon_feature = { 
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point", 
+                    "coordinates": [360 - coords[1], -1 * coords[0]]
+                },
+                "properties": {
+                    "name": "Moon", 
+                    "id": "moon",
+                    "magnitude": -12.74 
+                }
+            };
+            return moon_feature;
+        }; 
+
         base.utils.zenith = function() {
             if(!base.options.center) {
                 var date = base.datetime;
@@ -746,8 +936,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 "properties": {"name": "Zenith"}
             };
             return zenith_feature;
-        };
-        
+        }; 
+
         // Run initializer
         base.init();
     };
@@ -762,9 +952,13 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         // The scale of the chart. This effects how much of the sphere
         // is visible within the chart's viewport (`size`).
-        scale: 0.5, 
+        scale: 1, 
 
-        graticule: true,
+        // Zoomablility
+        zoom: {
+            zoomable: true,
+            extent: 10,
+        },
 
         // The date to be charted. Defaults to 'now'.
         date: new Date(),
@@ -772,6 +966,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // If you want a specific hour on whatever date 'today' happens
         // to be, set it here
         time: 21,
+        // time: undefined,
 
         // The location from which the sky is observered
         location: {
@@ -791,6 +986,17 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         //     dec: 0.0 
         // },
 
+        // Chart Features
+        graticule: true,
+        zenith: {
+            show: true,
+            size: 5
+        },
+        ecliptic: true,
+
+        // Solar System
+
+        // Sky
         stars: {
             magnitude: 5,
             scale: [6, 0.25],

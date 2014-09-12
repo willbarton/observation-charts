@@ -81,12 +81,19 @@
     stroke-linejoin: miter; 
     stroke: rgb(173,222,138); 
     stroke-opacity: 1; 
-    stroke-miterlimit: 4;'
+    stroke-miterlimit: 4;
 }
 
 /* Chart features */
 .zenith {
     fill: rgb(128,214,247);
+}
+.zenith {
+    fill: rgb(128,214,247);
+    stroke: rgb(128,214,247);
+}
+.zenith path {
+    stroke: rgb(128,214,247);
 }
 .ecliptic {
     fill: none;
@@ -138,7 +145,7 @@
     text-anchor: bottom; 
     dominant-baseline:top; 
     text-transform: uppercase; 
-    font-style: italic;'
+    font-style: italic;
 }
 
 
