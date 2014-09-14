@@ -40,6 +40,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // to reference this class from internal events and functions.
         var base = this;
         base.el = el;
+        base.$el = $(el);
 
         // Store the current rotation
         base.rotate = {x: 0, y: 90};
@@ -55,8 +56,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             if (base.options.time != undefined)
                 base.datetime.setHours(base.options.time, 0, 0, 0);
 
-            base.width = base.options.size.width - base.margin.left - base.margin.right;
-            base.height = base.options.size.height - base.margin.top - base.margin.bottom;
+            base.width = base.utils.width();
+            base.height = base.utils.height();
 
             // Select our container and create the SVG element.
             base.container = d3.select(base.el);
@@ -585,9 +586,10 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             // and one horizontal line; a circle and two paths.
             var planetaryNebulas = $.grep(data.features, function(d) {
                 return d.properties.type == 'Planetary Nebula' && 
-                    d.properties.magnitude <= base.options.planetarynebulas.magnitudes &&
+                    d.properties.magnitude <= base.options.planetarynebulas.magnitude &&
                     base.path(d) != undefined;
             });
+            console.log(planetaryNebulas);
             // We'll size the nebulas based on their magnitude, within our
             // min/max range.
             var planetaryNebulaMagnitudeScale = d3.scale.linear()
@@ -710,6 +712,26 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // ----
         base.utils = {};
 
+        base.utils.width = function() {
+            var width = base.options.size.width;
+            if (typeof width == "string") {
+                // assume it's a percentage
+                width = parseFloat(width)/100 * base.$el.width();
+                console.log(width);
+            }
+            return width - base.margin.left - base.margin.right;
+        };
+
+        base.utils.height = function() {
+            var height = base.options.size.height;
+            if (typeof height == "string") {
+                // assume it's a percentage
+                height = parseFloat(height)/100 * base.$el.height();
+                console.log(height);
+            }
+            return height - base.margin.top - base.margin.bottom;
+        };
+        
         // Generate a D3 line function that we'll use for the
         // planetary nebula and globular cluster symbols.
         base.utils.lineFunction = d3.svg.line()
@@ -965,8 +987,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         // If you want a specific hour on whatever date 'today' happens
         // to be, set it here
-        time: 21,
-        // time: undefined,
+        // time: 21,
+        time: undefined,
 
         // The location from which the sky is observered
         location: {
@@ -1028,7 +1050,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         planetarynebulas: {
             magnitude: 10,
-            scale: [12,6],
+            scale: [10,6],
             labelall: true,
             labelhover: true
         },
