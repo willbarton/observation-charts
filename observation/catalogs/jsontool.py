@@ -81,6 +81,7 @@ class CatalogsGeoJSONEncoder(json.JSONEncoder):
                             o.size.minor
                         ] if o.size is not None else [],
                         "angle": o.angle if o.angle is not None else 0,
+                        "aliases": o.aliases_combined,
                     },
                 }
             return feature
