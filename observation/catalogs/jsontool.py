@@ -59,9 +59,6 @@ class CatalogsGeoJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, CelestialObject):
             # GEOJSON feature
-            if o.type == 6:
-                print(OBJECT_TYPES[o.type])
-
             feature = {
                     "type": "Feature", 
                     "geometry": {
@@ -81,7 +78,7 @@ class CatalogsGeoJSONEncoder(json.JSONEncoder):
                             o.size.minor
                         ] if o.size is not None else [],
                         "angle": o.angle if o.angle is not None else 0,
-                        "aliases": o.aliases_combined,
+                        # "aliases": o.aliases_combined,
                     },
                 }
             return feature
