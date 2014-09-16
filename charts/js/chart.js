@@ -35,12 +35,13 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
 (function($){
 
-    ObservationChart = function(el, options){
+    var ObservationChart = function(el, options){
         // To avoid scope issues, use 'base' instead of 'this'
         // to reference this class from internal events and functions.
         var base = this;
         base.el = el;
         base.$el = $(el);
+        base.$el.data("ObservationChart" , base);
 
         // Store the current rotation
         base.rotate = {x: 0, y: 90};
@@ -50,20 +51,10 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
         // Initialization
         base.init = function(){
-            base.options = $.extend({},ObservationChart.defaultOptions, options);
-
-            base.datetime = base.options.date;
-            if (base.options.time != undefined)
-                base.datetime.setHours(base.options.time, 0, 0, 0);
-
-            base.width = base.utils.width();
-            base.height = base.utils.height();
 
             // Select our container and create the SVG element.
             base.container = d3.select(base.el);
-            base.svg = base.container.append('svg')
-                .attr('width', base.width + base.margin.left + base.margin.right)
-                .attr('height', base.height + base.margin.top + base.margin.bottom);
+            base.svg = base.container.append('svg').attr('class', 'observation-chart');
 
             // Create our groups.
             base.lines_group = base.svg.append('g')
@@ -95,20 +86,40 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .style('pointer-events', 'none');
 
             // Create and configure an instance of the orthographic projection
-            base.projection = d3.geo.stereographic()
-                .scale(base.width * (base.options.scale/2))
-                .translate([base.width / 2, base.height / 2])
-                .clipAngle(90)
-                .rotate([base.rotate.x / 2, -base.rotate.y / 2]);
-
-            // Center the projection
-            // Assume that RA is in hours (decimal) and dec is in degrees.
-            base.projection.rotate(base.utils.zenith());
+            base.projection = d3.geo.stereographic().clipAngle(90);
 
             // Create and configure the geographic path generator
             base.path = d3.geo.path().projection(base.projection);
 
-            base.draw();
+            // Do options-based initialization and drawing
+            base.update(options);
+
+        };
+
+        base.update = function(options) {
+            base.options = $.extend({},ObservationChart.defaultOptions, base.options, options);
+
+            // Set up the chart's date/time
+            base.datetime = base.options.date;
+            if (base.options.time > 0)
+                base.datetime.setHours(base.options.time, 0, 0, 0);
+
+            // Set the SVG width/height
+            base.width = base.utils.width();
+            base.height = base.utils.height();
+            base.svg
+                .attr('width', base.width + base.margin.left + base.margin.right)
+                .attr('height', base.height + base.margin.top + base.margin.bottom);
+            
+            // Configure the projection
+            base.projection
+                .scale(base.width * (base.options.scale/2))
+                .translate([base.width / 2, base.height / 2])
+                .rotate([base.rotate.x / 2, -base.rotate.y / 2]);
+
+            // Center the projection
+            base.projection.rotate(base.utils.zenith());
+            console.log("zenith", base.utils.zenith());
 
             // Set up zooming
             if (base.options.zoom) {
@@ -131,33 +142,26 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 base.svg.call(base.zoom);
             }
 
+            // Draw the chart
+            base.draw();
         };
 
         base.draw = function() {
             console.log("drawing");
 
+            base.lines_group.selectAll("*").remove();
+            base.chart_group.selectAll("*").remove();
+            base.const_group.selectAll("*").remove();
+            base.obj_group.selectAll("*").remove();
+            base.star_group.selectAll("*").remove();
+            base.solarsystem_group.selectAll("*").remove();
+            base.label_group.selectAll("*").remove();
+            
             // Globe Outline
             base.globe = base.lines_group.selectAll('path.globe').data([{type: 'Sphere'}])
                 .enter().append('path')
                 .attr('class', 'globe')
                 .attr('d', base.path);
-            
-            // Draw other chart features
-            base.drawZenith();
-            base.drawEcliptic();
-            base.drawInformation();
-            
-            // Load the constellations
-            d3.json('constellations.json', base.drawConstellations);
-
-            // Load the object catalog
-            d3.json('objects.json', base.drawObjects);
-            
-            // Load the star catalog
-            d3.json('stars.json', base.drawStars);
-
-            // Draw the solar System
-            base.drawSolarSystem();
             
             // Graticule
             base.graticule = d3.geo.graticule();
@@ -169,8 +173,32 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     .attr('class', 'graticule')
                     .attr('d', base.path);
             }
-                
-        }
+
+            // Draw other chart features
+            base.drawZenith();
+            base.drawEcliptic();
+            base.drawInformation();
+            
+            // Load the constellations
+            d3.json('constellations.json', function(error, data) {
+                base.drawConstellations(error, data);
+
+                // Load the object catalog
+                d3.json('objects.json', function(error, data) {
+                    base.drawObjects(error, data);
+
+                    // Load the star catalog
+                    d3.json('stars.json', function(error, data) {
+                        base.drawStars(error, data);
+
+                        // Draw the solar System
+                        base.drawSolarSystem();
+
+                        base.$el.trigger('drawn', [base])
+                    });
+                });
+            });
+        };
 
         // Draw labels for the given objects with the given css class
         // and with the given functions for calculating dx and dy.
@@ -281,13 +309,19 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         // Draw labels on the map for North, South, East, and West, and
         // the latitude/longitude date and time if they're applicable.
         base.drawInformation = function() {
+            // If we're set to a specific center ra/dec, we're not going
+            // to draw direction labels at this time.
+            if(base.options.center)
+                return;
+
+            var bbox = base.globe.node().getBBox();
 
             base.chart_group
                 .append('text')
                 .attr('class', 'chartinfo-label')
                 .style('text-anchor', 'middle')
                 .attr('transform', function(d) { 
-                    return 'translate(' + (base.width/2) + ',' + base.margin.top + ')';
+                    return 'translate(' + (bbox.x + bbox.width/2) + ',' + (bbox.y + base.margin.top) + ')';
                 })
                 .text('N')
             base.chart_group
@@ -295,7 +329,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('class', 'chartinfo-label')
                 .style('text-anchor', 'middle')
                 .attr('transform', function(d) { 
-                    return 'translate(' + (base.width/2) + ',' + (base.height - base.margin.top) + ')';
+                    return 'translate(' + (bbox.x + bbox.width/2) + ',' + (bbox.y + bbox.height - base.margin.top) + ')';
                 })
                 .text('S')
             base.chart_group
@@ -303,7 +337,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('class', 'chartinfo-label')
                 .style('text-anchor', 'middle')
                 .attr('transform', function(d) { 
-                    return 'translate(' + (base.width - base.margin.left) + ',' + (base.height/2) + ')';
+                    return 'translate(' + (bbox.x + bbox.width - base.margin.left) + ',' + (bbox.y + bbox.height/2) + ')';
                 })
                 .text('W')
             base.chart_group
@@ -311,44 +345,10 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 .attr('class', 'chartinfo-label')
                 .style('text-anchor', 'middle')
                 .attr('transform', function(d) { 
-                    return 'translate(' + base.margin.left + ',' + (base.height/2) + ')';
+                    return 'translate(' + (bbox.x + base.margin.left) + ',' + (bbox.y + bbox.height/2) + ')';
                 })
                 .text('E')
             
-
-            // If we're set to a specific center ra/dec, we're not going
-            // to draw labels at this time.
-            if(base.options.center)
-                return;
-
-            var latstring = (base.options.location.latitude > 0) ? 
-                            base.options.location.latitude + ' N ' :
-                            -1 * base.options.location.latitude + ' S ';
-            var lonstring = (base.options.location.longitude> 0) ? 
-                            base.options.location.longitude + ' E ' :
-                            -1 * base.options.location.longitude + ' W '; 
-            var locstring = latstring + lonstring;
-            var datestring = base.datetime.toString('h:mm tt MMM d, yyyy');
-            
-            base.chart_group
-                .append('text')
-                .attr('class', 'chartinfo-label')
-                .style('text-anchor', 'left')
-                .style('font-size', '12px')
-                .attr('transform', function(d) { 
-                    return 'translate(' + base.margin.left + ',' + base.margin.top + ')';
-                })
-                .text(locstring)
-            base.chart_group
-                .append('text')
-                .attr('class', 'chartinfo-label')
-                .style('text-anchor', 'right')
-                .style('font-size', '12px')
-                .attr('transform', function(d) { 
-                    return 'translate(' + base.margin.left + ',' + (base.margin.top + 16) + ')';
-                })
-                .text(datestring)
-
         };
 
         base.drawSolarSystem = function() {
@@ -435,6 +435,8 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         base.drawObjects = function(error, data) {
             // Handle errors getting and parsing the data
             if (error) { return error; }
+
+            console.log(data.features[0]);
 
             // Galaxies
             // -----
@@ -589,7 +591,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                     d.properties.magnitude <= base.options.planetarynebulas.magnitude &&
                     base.path(d) != undefined;
             });
-            console.log(planetaryNebulas);
             // We'll size the nebulas based on their magnitude, within our
             // min/max range.
             var planetaryNebulaMagnitudeScale = d3.scale.linear()
@@ -695,6 +696,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             }
         }
 
+        // Data handling functions
         base.data = {};
 
         // Return a new object for d.properties that replaces any
@@ -708,6 +710,23 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             return overrideProperties;
         }
 
+        // Information querying functions
+        base.info = {};
+        base.info.datetime = function() {
+            return base.datetime.toString('h:mm tt MMM d, yyyy');
+        };
+
+        base.info.location = function() {
+            var latstring = (base.options.location.latitude > 0) ? 
+                            base.options.location.latitude + ' N ' :
+                            -1 * base.options.location.latitude + ' S ';
+            var lonstring = (base.options.location.longitude> 0) ? 
+                            base.options.location.longitude + ' E ' :
+                            -1 * base.options.location.longitude + ' W '; 
+            var locstring = latstring + lonstring;
+            return locstring;
+        };
+
         // Utility functions 
         // ----
         base.utils = {};
@@ -717,7 +736,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             if (typeof width == "string") {
                 // assume it's a percentage
                 width = parseFloat(width)/100 * base.$el.width();
-                console.log(width);
             }
             return width - base.margin.left - base.margin.right;
         };
@@ -727,7 +745,6 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             if (typeof height == "string") {
                 // assume it's a percentage
                 height = parseFloat(height)/100 * base.$el.height();
-                console.log(height);
             }
             return height - base.margin.top - base.margin.bottom;
         };
@@ -1306,7 +1323,12 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
     
     $.fn.observationChart = function(options){
         return this.each(function(){
-            (new ObservationChart(this, options));
+            var $this = $(this);
+            var data = $this.data('ObservationChart')
+            if (!data) 
+                $this.data('ObservationChart', (data = new ObservationChart(this, options)));
+            else
+                $this.data('ObservationChart').update(options);
         });
     };
 
