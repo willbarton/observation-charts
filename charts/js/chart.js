@@ -242,7 +242,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             //     .attr('class', 'zenith')
             //     .attr('d', base.path);
 
-            var zenithElm = base.obj_group.selectAll('g.zenith')
+            var zenithElm = base.chart_group.selectAll('g.zenith')
                 .data(feature)
                 .enter().append('g')
                     .attr('id', 'zenith')
