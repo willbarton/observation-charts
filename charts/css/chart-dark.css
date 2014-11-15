@@ -30,14 +30,14 @@ svg.observation-chart {
 /* The base style for an open cluster. This appears as a yellow circle
  * with a dashed black border. */
 .open-cluster {
-    fill: rgb(128, 0, 6);
+    fill: rgb(128, 121, 0);
     stroke: rgb(230, 228, 231);
 }
 
 /* The base style for a globular cluster. This appears as a yellow
  * square with a thin black border. */
 .globular-cluster circle {
-    fill: rgb(128, 0, 6);
+    fill: rgb(128, 121, 0);
     stroke: rgb(230, 228, 231);
 }
 .globular-cluster path {

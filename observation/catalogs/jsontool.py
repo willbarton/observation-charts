@@ -70,7 +70,6 @@ class CatalogsGeoJSONEncoder(json.JSONEncoder):
                     },
                     "properties": {
                         "id": o.id,
-                        "name": o.id, # name might want to be overriden
                         "magnitude": o.magnitude,
                         "type": OBJECT_TYPES[o.type],
                         "size": [
@@ -81,6 +80,9 @@ class CatalogsGeoJSONEncoder(json.JSONEncoder):
                         # "aliases": o.aliases_combined,
                     },
                 }
+            if self.args.includename:
+                feature['properties']['name'] = o.id
+
             return feature
 
         if isinstance(o, Constellation):
@@ -136,8 +138,8 @@ def main():
             help="invert the right ascension coordinates (useful for projections that expect longitude/latitude)")
     parser.add_argument('--geojson', action="store_true", default=False,
             help="output in GeoJSON Feature format")
-    parser.add_argument('--iau-symbols', action="store_true", default=False,
-            help="use IAU graphical symbols for objects when outputting GeoJSON")
+    parser.add_argument('--includename', action="store_true", default=False,
+            help="include the object id as its name in the output")
     
     args = parser.parse_args()
 

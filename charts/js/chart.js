@@ -97,7 +97,7 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         };
 
         base.update = function(options) {
-            base.options = $.extend({},ObservationChart.defaultOptions, base.options, options);
+            base.options = $.extend(true, {},ObservationChart.defaultOptions, base.options, options);
 
             // Set up the chart's date/time
             base.datetime = base.options.date;
@@ -180,15 +180,15 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
             base.drawInformation();
             
             // Load the constellations
-            d3.json('constellations.json', function(error, data) {
+            d3.json(base.options.data.constellations, function(error, data) {
                 base.drawConstellations(error, data);
 
                 // Load the object catalog
-                d3.json('objects.json', function(error, data) {
+                d3.json(base.options.data.objects, function(error, data) {
                     base.drawObjects(error, data);
 
                     // Load the star catalog
-                    d3.json('stars.json', function(error, data) {
+                    d3.json(base.options.data.stars, function(error, data) {
                         base.drawStars(error, data);
 
                         // Draw the solar System
@@ -1033,49 +1033,49 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
         },
         ecliptic: true,
 
+        data: {
+            constellations: 'constellations.json',
+            objects: 'objects.json',
+            stars: 'stars.json'
+        },
+
         // Solar System
 
         // Sky
         stars: {
             magnitude: 5,
             scale: [6, 0.25],
-            labelall: false,
             labelhover: false
         },
 
         galaxies: {
-            magnitude: 8,
+            magnitude: 10,
             majorscale: [4, 8],
             minorscale: [2, 4],
-            labelall: true,
             labelhover: true
         },
         
         openclusters: {
             magnitude: 6,
             scale: [6,3],
-            labelall: true,
             labelhover: true
         },
 
         globularclusters: {
             magnitude: 8,
             scale: [6,4],
-            labelall: true,
             labelhover: true
         },
 
         planetarynebulas: {
             magnitude: 10,
             scale: [10,6],
-            labelall: true,
             labelhover: true
         },
 
         brightnebulas: {
             magnitude: 10,
             scale: [10,6],
-            labelall: true,
             labelhover: true
         },
 
@@ -1331,6 +1331,39 @@ var ONEEIGHTY_OVER_PI = 180/Math.PI;
                 $this.data('ObservationChart').update(options);
         });
     };
+
+    // Legend SVG Generation
+    var ObservationChartLegend = function(el, options){
+        var base = this;
+        base.el = el;
+        base.$el = $(el);
+
+        // Store the basic margins
+        base.margin = {top: 20, right: 20, bottom: 20, left: 20};
+
+        // Initialization
+        base.init = function(){
+            // Select our container and create the SVG element.
+            base.container = d3.select(base.el);
+            base.svg = base.container.append('svg').attr('class', 'observation-chart');
+        };
+
+        // Run initializer
+        base.init();
+        
+    };
+    
+    ObservationChartLegend.defaultOptions = {
+
+    };
+
+    $.fn.observationChartLegend = function(options){
+        return this.each(function(){
+            return new ObservationChartLegend(this, options);
+        });
+    };
+
+    // 
 
 })(jQuery);
 

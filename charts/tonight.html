@@ -88,6 +88,13 @@
         }
 
         /* Theme support */
+        body.day { 
+            background-color: white;
+        }
+        body.mono { 
+            background-color: white;
+        }
+        
         body.dark { 
             background-color: black;
         }
@@ -252,6 +259,11 @@
         <li id="sky-tonight" class="active"><a>Sky Tonight (10 PM)</a></li>
 
         <li class="divider"></li>
+
+        <li id="sky-sd" class="active"><a>"SD"</a></li>
+        <li id="sky-hd"><a>"HD"</a></li>
+
+        <li class="divider"></li>
         
         <!-- 
         <li class="dropdown">
@@ -306,6 +318,11 @@
               $('#current-location').html(chart.info.location);
           });
 
+          $('#sky-chart').on('drawn', function(e, chart) {
+              $('#current-datetime').html(chart.info.datetime);
+              $('#current-location').html(chart.info.location);
+          });
+
           var options = {
                   time: 22,
                   size: {
@@ -315,8 +332,10 @@
               };
 
           // Get the user's GPS coordinates if they'll let us. Otherwise use New York.
+          // XXX: Add a timeout
           if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(function(position) {
+              console.log("setting up chart with location");
                   options.location = { 
                           latitude: position.coords.latitude, 
                           longitude: position.coords.longitude
@@ -325,8 +344,11 @@
               });
           } else {
               // Set up the chart
+              console.log("setting up chart without location");
               $('#sky-chart').observationChart(options);
           }
+
+          $('#sky-chart').observationChart(options);
 
           // Set up chart configuration options
           $('#sky-now a').click(function(e) {
@@ -345,6 +367,75 @@
               });
           });
 
+          // Select "SD" (moderate magnitude stars/objects) and "HD" (low magnitude stars and objects)
+          $('#sky-hd a').click(function(e) {
+              $('#sky-sd').removeClass('active');
+              $('#sky-hd').addClass('active');
+              $('#sky-chart').observationChart({
+                  data: {
+                      stars: 'starsHD.json',
+                      objects: 'objects.json',
+                  },
+                  stars: {
+                      magnitude: 10,
+                  },
+
+                  galaxies: {
+                      magnitude: 15
+                  },
+                  
+                  openclusters: {
+                      magnitude: 8,
+                  },
+
+                  globularclusters: {
+                      magnitude: 12
+                  },
+
+                  planetarynebulas: {
+                      magnitude: 20,
+                  },
+
+                  brightnebulas: {
+                      magnitude: 20,
+                  }
+              });
+          });
+          $('#sky-sd a').click(function(e) {
+              $('#sky-hd').removeClass('active');
+              $('#sky-sd').addClass('active');
+              $('#sky-chart').observationChart({
+                  data: {
+                      stars: 'stars.json',
+                      objects: 'objects.json',
+                  },
+                  stars: {
+                      magnitude: 5,
+                  },
+
+                  galaxies: {
+                      magnitude: 8,
+                  },
+                  
+                  openclusters: {
+                      magnitude: 6,
+                  },
+
+                  globularclusters: {
+                      magnitude: 8,
+                  },
+
+                  planetarynebulas: {
+                      magnitude: 10,
+                  },
+
+                  brightnebulas: {
+                      magnitude: 10,
+                  }
+              });
+          });
+          
+
           // Set up themes
           $('#theme-day-select a').click(function(e) {
               console.log("Selecting day theme");
@@ -362,7 +453,7 @@
               $('#theme-' + localStorage.getItem('theme') + '-select').removeClass('active');
               $('#theme-mono-select').addClass('active');
               $('#theme-' + localStorage.getItem('theme')).remove();
-              $('head').append('<link id="theme-mono" rel="stylesheet" type="text/css" href="css/chart-mono.css">');
+              $('head').append('<link id="theme-mono" class="theme-style" rel="stylesheet" type="text/css" href="css/chart-mono.css">');
               localStorage.setItem('theme', 'mono');
           });
           $('#theme-dark-select a').click(function(e) {
@@ -372,7 +463,7 @@
               $('#theme-' + localStorage.getItem('theme') + '-select').removeClass('active');
               $('#theme-dark-select').addClass('active');
               $('#theme-' + localStorage.getItem('theme')).remove();
-              $('head').append('<link id="theme-dark" rel="stylesheet" type="text/css" href="css/chart-dark.css">');
+              $('head').append('<link id="theme-dark" class="theme-style" rel="stylesheet" type="text/css" href="css/chart-dark.css">');
               localStorage.setItem('theme', 'dark');
           });
           $('#theme-night-select a').click(function(e) {
@@ -381,8 +472,8 @@
               $('body').addClass('night');
               $('#theme-' + localStorage.getItem('theme') + '-select').removeClass('active');
               $('#theme-night-select').addClass('active');
-              $('#theme-' + $('body').attr('data-theme')).remove();
-              $('head').append('<link id="theme-night" rel="stylesheet" type="text/css" href="css/chart-night.css">');
+              $('#theme-' + localStorage.getItem('theme')).remove();
+              $('head').append('<link id="theme-night" class="theme-style" rel="stylesheet" type="text/css" href="css/chart-night.css">');
               localStorage.setItem('theme', 'night');
           });
 
