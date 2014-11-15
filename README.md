@@ -3,6 +3,11 @@ Observation-Charts
 
 Generate SVG star charts. 
 
+See http://gulielmus.github.io/observation-charts/ for more information.
+
+See http://gulielmus.github.io/observation-charts/tonight for a
+realistically useful "Tonight's Sky" using Observation Charts.
+
 Goal: Create dynamic charts that resemble the IAU Constellation
 charts. This is a disjointed collection of stuff at the moment that is
 slowly coalescing into an orderly pairing of a Python package that
