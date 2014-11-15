@@ -3,7 +3,8 @@ Observation-Charts
 
 Generate SVG star charts. 
 
-See http://gulielmus.github.io/observation-charts/ for more information.
+See http://gulielmus.github.io/observation-charts/ for more information
+and examples.
 
 See http://gulielmus.github.io/observation-charts/tonight for a
 realistically useful "Tonight's Sky" using Observation Charts.
