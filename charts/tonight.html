@@ -283,7 +283,7 @@
     </nav>
 
     <button type="button" id="skychart-nav-toggle" class="navbar-toggle" data-toggle="offcanvas" data-target="#skychart-nav" >
-      O
+      <i class="glyphicon glyphicon-cog"></i>
     </button>
 
     <div id="sky-chart"></div>
@@ -370,6 +370,7 @@
           // Select "SD" (moderate magnitude stars/objects) and "HD" (low magnitude stars and objects)
           $('#sky-hd a').click(function(e) {
               $('#sky-sd').removeClass('active');
+              $('#sky-messier').removeClass('active');
               $('#sky-hd').addClass('active');
               $('#sky-chart').observationChart({
                   data: {
@@ -381,28 +382,29 @@
                   },
 
                   galaxies: {
-                      magnitude: 15
+                      magnitude: 8
                   },
                   
                   openclusters: {
-                      magnitude: 8,
+                      magnitude: 6
                   },
 
                   globularclusters: {
-                      magnitude: 12
+                      magnitude: 8
                   },
 
                   planetarynebulas: {
-                      magnitude: 20,
+                      magnitude: 10,
                   },
 
                   brightnebulas: {
-                      magnitude: 20,
+                      magnitude: 10,
                   }
               });
           });
           $('#sky-sd a').click(function(e) {
               $('#sky-hd').removeClass('active');
+              $('#sky-messier').removeClass('active');
               $('#sky-sd').addClass('active');
               $('#sky-chart').observationChart({
                   data: {
@@ -414,7 +416,7 @@
                   },
 
                   galaxies: {
-                      magnitude: 8,
+                      magnitude: 10
                   },
                   
                   openclusters: {
@@ -434,7 +436,6 @@
                   }
               });
           });
-          
 
           // Set up themes
           $('#theme-day-select a').click(function(e) {

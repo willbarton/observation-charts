@@ -27,6 +27,8 @@
 # 
 
 import argparse
+import re
+
 from objects import OBJECT_TYPES, CelestialObject, NGCCatalog, HYGStarCatalog
 from constellations import ConstellationCatalog, Constellation
 
@@ -77,7 +79,7 @@ class CatalogsGeoJSONEncoder(json.JSONEncoder):
                             o.size.minor
                         ] if o.size is not None else [],
                         "angle": o.angle if o.angle is not None else 0,
-                        # "aliases": o.aliases_combined,
+                        "aliases": o.aliases,
                     },
                 }
             if self.args.includename:
@@ -129,8 +131,8 @@ def main():
     parser.add_argument('--constellations', type=str, 
             help="specifies the constellations file path")
 
-    parser.add_argument('--specifically', action='append', default=[],
-            help="specifies the specific ids to be included (constellations only at the moment)")
+    parser.add_argument('--specifically', type=str, default='',
+            help="a regular expression that matches specific object ids or aliases to include")
 
     parser.add_argument('--indent', type=int,
             help="specifies that the output should be pretty-printed and the indent level")
@@ -149,22 +151,34 @@ def main():
 
     objects = []
 
+    print(args.specifically)
+    specifically = re.compile(args.specifically)
+
     if args.hyg:
         hyg_catalog = HYGStarCatalog(open(args.hyg))
         objects.extend([ o for o in hyg_catalog.values() 
             if (o.magnitude <= args.magnitude) and 
-                (len(args.specifically) == 0 or o.id in args.specifically)])
+                (specifically.search(o.id) or
+                specifically.search(''.join(o.aliases)))])
 
     if args.ngc:
         ngc_catalog = NGCCatalog(open(args.ngc))
-        objects.extend([o for o in ngc_catalog.values() 
-            if (o.magnitude <= args.magnitude) and
-                (len(args.specifically) == 0 or o.id in args.specifically)])
+        for o in ngc_catalog.values():
+            if (o.magnitude <= args.magnitude) and \
+                specifically.search(''.join(o.aliases)):
+                print("APPENDING", o.aliases)
+                objects.append(o)
+
+        # objects.extend([o for o in ngc_catalog.values() 
+        #    if (o.magnitude <= args.magnitude) and
+        #        (specifically.search(o.id) or
+        #        specifically.search(''.join(o.aliases)))])
+
         
     if args.constellations:
         const_catalog = ConstellationCatalog(open(args.constellations))
         objects.extend([o for o in const_catalog.values() 
-            if (len(args.specifically) == 0 or o.abbr in args.specifically)])
+            if (specifically.search(o.abbr))])
     
     json_string = ""
     if args.geojson:

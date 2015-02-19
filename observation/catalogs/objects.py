@@ -135,24 +135,24 @@ class CelestialObject(object):
             self.__aliases = OrderedDict([(self.identifier, self.catalog),])
         return [v for v in self.__aliases.values() if v is not None]
 
-    # `aliases`, a list of all the identifiers for this object,
+    # `aliases_dict`, a list of all the identifiers for this object,
     # corrosponding to the list of catalogs.
     # The index of aliases *with* catalogs will corrospond to the
     # `catalogs` list. Aliases *without* catalogs will be placed at the
     # end of the aliases list in the order they were added, from the
     # `len(catalogs)` position onward.
     @property
-    def aliases(self):
+    def aliases_dict(self):
         # Make sure we return the primary identifier
         if self.__aliases is None:
             self.__aliases = OrderedDict([(self.identifier, self.catalog),])
         return list(self.__aliases.keys())
 
-    # `aliases_combined` is a list of all the `{catalog}{alias}` strings
+    # `aliases` is a list of all the `{catalog}{alias}` strings
     # for each alias that belongs to a catalog, or just `{alias}` if
     # the alias has no catalogs.
     @property
-    def aliases_combined(self):
+    def aliases(self):
         # Make sure we return the primary identifier
         if self.__aliases is None:
             self.__aliases = OrderedDict([(self.identifier, self.catalog),])
@@ -182,9 +182,9 @@ class TestCelestialObject(unittest.TestCase):
     # objects are likely to come from a catalog, and it would be better
     # to use a catalog-specific class to handle any catalog-specific
     # quirks.
-    def test_aliases(self):
+    def test_aliases_dict(self):
         c = CelestialObject('1976', 'NGC')
-        self.assertEqual(c.aliases, ['1976',])
+        self.assertEqual(c.aliases_dict, ['1976',])
 
     def test_catalogs(self):
         c = CelestialObject('1976', 'NGC')
@@ -194,11 +194,11 @@ class TestCelestialObject(unittest.TestCase):
         c = CelestialObject('1976', 'NGC')
 
         c.add_alias('42', 'M')
-        self.assertEqual(c.aliases, ['1976', '42'])
+        self.assertEqual(c.aliases_dicts, ['1976', '42'])
         self.assertEqual(c.catalogs, ['NGC', 'M'])
 
         c.add_alias('The Orion Nebula')
-        self.assertEqual(c.aliases, ['1976', '42', 'The Orion Nebula'])
+        self.assertEqual(c.aliases_dicts, ['1976', '42', 'The Orion Nebula'])
         self.assertEqual(c.catalogs, ['NGC', 'M'])
 
 
