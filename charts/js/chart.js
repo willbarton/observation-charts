@@ -286,111 +286,7 @@ function ObservationChart(selection, options) {
     // to reference this class from internal events and functions.
     var base = this;
 
-    base.defaultOptions = {
-        // The size of the chart  viewport. This plus the `scale`
-        // effects how much of the sphere is visible.
-        size: {
-            width: 400,
-            height: 400,
-        },
-
-        // The scale of the chart. This effects how much of the sphere
-        // is visible within the chart's viewport (`size`).
-        scale: 1, 
-
-        // Zoomablility
-        zoom: {
-            zoomable: true,
-            extent: 10
-        },
-
-        // The date to be charted. Defaults to 'now'.
-        date: new Date(),
-
-        // If you want a specific hour on whatever date 'today' happens
-        // to be, set it here
-        // time: 21,
-        time: undefined,
-
-        // The location from which the sky is observered
-        location: {
-            latitude: 40.7528000,
-            longitude: -73.9765222
-        },
-            
-        // OR
-
-        // The positioning of the chart. If the chart's scale is such
-        // that you can see the entire sphere, this will effect its
-        // rotation.
-        // RA is presumed in decimal hours, dec in degrees.
-        center: undefined,
-        // center: {
-        //     ra: 5.8,
-        //     dec: 0.0 
-        // },
-
-        // Chart Features
-        graticule: true,
-        zenith: {
-            show: true,
-            size: 5
-        },
-        ecliptic: true,
-
-        data: {
-            constellations: 'data/constellations.json',
-            objects: 'data/objects.json',
-            stars: 'data/stars.json'
-        },
-
-        // Solar System
-
-        // Sky
-        stars: {
-            magnitude: 5,
-            scale: [6, 0.25],
-            labelhover: false
-        },
-
-        galaxies: {
-            magnitude: 10,
-            majorscale: [4, 8],
-            minorscale: [2, 4],
-            labelhover: true
-        },
-        
-        openclusters: {
-            magnitude: 6,
-            scale: [6,3],
-            labelhover: true
-        },
-
-        globularclusters: {
-            magnitude: 8,
-            scale: [6,4],
-            labelhover: true
-        },
-
-        planetarynebulas: {
-            magnitude: 12,
-            scale: [10,6],
-            labelhover: true
-        },
-
-        brightnebulas: {
-            magnitude: 12,
-            scale: [10,6],
-            labelhover: true
-        },
-
-        // Override settings/label for any given object
-        overrides: $.extend({}, BrightStars, Messier, InterestingObjects),
-
-    };
-
     base.selection = d3.select(selection);
-    base.$el = $(selection[0][0]);
 
     // Store the current rotation
     base.rotate = {x: 0, y: 90};
@@ -445,7 +341,7 @@ function ObservationChart(selection, options) {
     };
 
     base.update = function(options) {
-        base.options = $.extend(true, {},base.defaultOptions, base.options, options);
+        base.options = base.utils.extend({}, base.defaultOptions, base.options, options);
 
         // Set up the chart's date/time
         base.datetime = base.options.date;
@@ -539,8 +435,6 @@ function ObservationChart(selection, options) {
 
                     // Draw the solar System
                     base.drawSolarSystem();
-                    // base.drawn();
-                    // base.$el.trigger('drawn', [base])
                 });
             });
         });
@@ -747,9 +641,10 @@ function ObservationChart(selection, options) {
         // Handle errors getting and parsing the data
         if (error) { return error; }
 
-        var stars = $.grep(data.features, function(d) {
+        var stars = data.features.filter(function(d) {
             return d.properties.magnitude <= base.options.stars.magnitude;
         });
+
 
         // Compute the radius scale. The radius will be proportional to
         // the aparent magnitude
@@ -786,7 +681,7 @@ function ObservationChart(selection, options) {
         // The galaxy is a red ellipse whose shape and orientation
         // roughly match that of the object it represents; an SVG
         // ellipse.
-        var galaxies = $.grep(data.features, function(d) {
+        var galaxies = data.features.filter(function(d) {
             return d.properties.type == 'Galaxy' && 
                 (
                   // The magnitude is below our threshold OR
@@ -835,7 +730,7 @@ function ObservationChart(selection, options) {
         // -----
         // The open cluster is a yellow circle with a dashed border
         // to indicate its openness; an SVG circle.
-        var openClusters = $.grep(data.features, function(d) {
+        var openClusters = data.features.filter(function(d) {
             return d.properties.type == 'Open Cluster' && 
                 (
                   // The magnitude is below our threshold OR
@@ -873,7 +768,7 @@ function ObservationChart(selection, options) {
         // -----
         // The globular cluster is a yellow circle with one vertical
         // and one horizontal line; a circle and two paths.
-        var globularClusters = $.grep(data.features, function(d) {
+        var globularClusters = data.features.filter(function(d) {
             return d.properties.type == 'Globular Cluster' && 
                 (
                   // The magnitude is below our threshold OR
@@ -944,7 +839,7 @@ function ObservationChart(selection, options) {
         // -----
         // The planetary nebula is a green circle with one vertical
         // and one horizontal line; a circle and two paths.
-        var planetaryNebulas = $.grep(data.features, function(d) {
+        var planetaryNebulas = data.features.filter(function(d) {
             return d.properties.type == 'Planetary Nebula' && 
                 (
                   // The magnitude is below our threshold OR
@@ -1012,7 +907,7 @@ function ObservationChart(selection, options) {
 
         // Bright Nebulas
         // -----
-        var brightNebulas = $.grep(data.features, function(d) {
+        var brightNebulas = data.features.filter(function(d) {
             return d.properties.type == 'Bright Nebula' && 
                 (
                   // The magnitude is below our threshold OR
@@ -1073,7 +968,7 @@ function ObservationChart(selection, options) {
             return d.properties;
 
         var overrides = base.options.overrides[d.properties.id];
-        var overrideProperties = $.extend({}, d.properties, overrides);
+        var overrideProperties = base.utils.extend({}, d.properties, overrides);
         return overrideProperties;
     }
 
@@ -1098,11 +993,35 @@ function ObservationChart(selection, options) {
     // ----
     base.utils = {};
 
+    // An extend()-alike function
+    // http://gomakethings.com/ditching-jquery/#extend
+    base.utils.extend = function(objects) {
+        var extended = {};
+        var merge = function (obj) {
+            for (var prop in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+                    if ( Object.prototype.toString.call(obj[prop]) === '[object Object]' ) {
+                        extended[prop] = base.utils.extend(extended[prop], obj[prop]);
+                    }
+                    else {
+                        extended[prop] = obj[prop];
+                    }
+                }
+            }
+        };
+        merge(arguments[0]);
+        for (var i = 1; i < arguments.length; i++) {
+            var obj = arguments[i];
+            merge(obj);
+        }
+        return extended;
+    };
+
     base.utils.width = function() {
         var width = base.options.size.width;
         if (typeof width == "string") {
             // assume it's a percentage
-            width = parseFloat(width)/100 * base.$el.width();
+            width = parseFloat(width)/100 * base.el.node().getBBox().width;
         }
         return width - base.margin.left - base.margin.right;
     };
@@ -1111,7 +1030,7 @@ function ObservationChart(selection, options) {
         var height = base.options.size.height;
         if (typeof height == "string") {
             // assume it's a percentage
-            height = parseFloat(height)/100 * base.$el.height();
+            height = parseFloat(height)/100 * base.el.node().getBBox().height;
         }
         return height - base.margin.top - base.margin.bottom;
     };
@@ -1340,22 +1259,116 @@ function ObservationChart(selection, options) {
         return zenith_feature;
     }; 
 
+    // Default options for the chart
+    base.defaultOptions = {
+        // The size of the chart  viewport. This plus the `scale`
+        // effects how much of the sphere is visible.
+        size: {
+            width: 400,
+            height: 400,
+        },
+
+        // The scale of the chart. This effects how much of the sphere
+        // is visible within the chart's viewport (`size`).
+        scale: 1, 
+
+        // Zoomablility
+        zoom: {
+            zoomable: true,
+            extent: 10
+        },
+
+        // The date to be charted. Defaults to 'now'.
+        date: new Date(),
+
+        // If you want a specific hour on whatever date 'today' happens
+        // to be, set it here
+        // time: 21,
+        time: undefined,
+
+        // The location from which the sky is observered
+        location: {
+            latitude: 40.7528000,
+            longitude: -73.9765222
+        },
+            
+        // OR
+
+        // The positioning of the chart. If the chart's scale is such
+        // that you can see the entire sphere, this will effect its
+        // rotation.
+        // RA is presumed in decimal hours, dec in degrees.
+        center: undefined,
+        // center: {
+        //     ra: 5.8,
+        //     dec: 0.0 
+        // },
+
+        // Chart Features
+        graticule: true,
+        zenith: {
+            show: true,
+            size: 5
+        },
+        ecliptic: true,
+
+        data: {
+            constellations: 'data/constellations.json',
+            objects: 'data/objects.json',
+            stars: 'data/stars.json'
+        },
+
+        // Solar System
+
+        // Sky
+        stars: {
+            magnitude: 5,
+            scale: [6, 0.25],
+            labelhover: false
+        },
+
+        galaxies: {
+            magnitude: 10,
+            majorscale: [4, 8],
+            minorscale: [2, 4],
+            labelhover: true
+        },
+        
+        openclusters: {
+            magnitude: 6,
+            scale: [6,3],
+            labelhover: true
+        },
+
+        globularclusters: {
+            magnitude: 8,
+            scale: [6,4],
+            labelhover: true
+        },
+
+        planetarynebulas: {
+            magnitude: 12,
+            scale: [10,6],
+            labelhover: true
+        },
+
+        brightnebulas: {
+            magnitude: 12,
+            scale: [10,6],
+            labelhover: true
+        },
+
+        // Override settings/label for any given object
+        overrides: base.utils.extend({}, BrightStars, Messier, InterestingObjects),
+
+    };
+    
+    console.log(base.utils.extend({}, base.defaultOptions));
+
     // Run initializer
     base.init();
 
-    /*
-    $.fn.observationChart = function(options){
-        return this.each(function(){
-            var $this = $(this);
-            var data = $this.data('ObservationChart')
-            if (!data) 
-                $this.data('ObservationChart', (data = new ObservationChart(this, options)));
-            else
-                $this.data('ObservationChart').update(options);
-        });
-    };
-    */
-    
+    // Return the object
     return base;
 }
 
