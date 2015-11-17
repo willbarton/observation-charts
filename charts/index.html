@@ -24,11 +24,11 @@
         <pre>
 &lt;div id="full-sky"&gt;&lt;/div&gt;
 ...
-$('#full-sky').observationChart({
+new ObservationChart(d3.select('#full-sky')[0][0], {
     size: {
-        width: 600,
-        height: 600,
-    },
+        width: 800,
+        height: 800,
+    }
 });
           </pre>
       </div>        
@@ -42,16 +42,19 @@ $('#full-sky').observationChart({
         <pre>
 &lt;div id="orion"&gt;&lt;/div&gt;
 ...
-$('#orion').observationChart({
-  size: {
-    width: 400,
-    height: 400,
-  },
-  center: {
-    ra: 5.8,
-    dec: 0.0 
-  },
-  scale: 4
+new ObservationChart(d3.select('#orion')[0][0], {
+    size: {
+        width: 400,
+        height: 400,
+    },
+    center: {
+        ra: 5.8,
+        dec: 0.0 
+    },
+    scale: 4,
+    zoom: {
+        zoomable: false
+    }
 });
           </pre>
       
@@ -61,28 +64,28 @@ $('#orion').observationChart({
     <script src="bower_components/datejs/build/production/date.min.js" charset="utf-8"></script>
     <script src="bower_components/jquery/dist/jquery.min.js" charset="utf-8"></script>
     <script src="js/chart.js" charset="utf-8"/>
-    <script>console.log("something!");</script>
+    <script></script>
     <script>
-      (function($){
-        $('#full-sky').observationChart({
-            size: {
-                width: 800,
-                height: 800,
-            },
-        });
-        $('#orion').observationChart({
-            size: {
-                width: 400,
-                height: 400,
-            },
-            center: {
-                ra: 5.8,
-                dec: 0.0 
-            },
-            scale: 4
-        });
-        
-      })(jQuery);
+      new ObservationChart('#full-sky', {
+          size: {
+              width: 800,
+              height: 800,
+          }
+      });
+      new ObservationChart('#orion', {
+          size: {
+              width: 400,
+              height: 400,
+          },
+          center: {
+              ra: 5.8,
+              dec: 0.0 
+          },
+          scale: 4,
+          zoom: {
+              zoomable: false
+          }
+      });
     </script>
   </body>
 </html>
