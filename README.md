@@ -24,8 +24,7 @@ Currently there are two interesting components:
    utility to make reading and exporting from those databases to a
    custom JSON format and GeoJSON relatively straight-forward. This
    package is intended to be used to format data for...
-2. JavaScript package `observation-chart`. This package includes (right
-   now) a jQuery plugin which draws an SVG star chart based on a given
+2. JavaScript package `observation-chart`. This package includes  which draws an SVG star chart based on a given
    configuration (either a particular region of the sky or the whole sky for 
    a given location and time). See [`charts/index.html`](chart/index.html) 
    for more specific information.

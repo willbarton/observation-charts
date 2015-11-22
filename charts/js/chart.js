@@ -33,252 +33,6 @@ var TWO_PI = Math.PI * 2;
 var TWELVE_OVER_PI = 12/Math.PI;
 var ONEEIGHTY_OVER_PI = 180/Math.PI;
 
-var BrightStars = {
-    // Bright, common named stars
-    HIP24436: {name:'Rigel', },
-    HIP27989: {name:'Betelgeuse', },
-    HIP32349: {name:'Sirius', },
-    HIP37279: {name:'Procyon', },
-    HIP24608: {name:'Capella', },
-    HIP5447:  {name:'Mirach', },
-    HIP14576: {name:'Algol', },
-    HIP21421: {name:'Aldebaran', },
-    HIP10826: {name:'Mira', },
-    HIP49669: {name:'Regulus', },
-    HIP57632: {name:'Denebola', },
-    HIP65474: {name:'Spica', },
-    HIP69673: {name:'Arcturus', },
-    HIP11767: {name:'Polaris', },
-    HIP54061: {name:'Dubhe', },
-    HIP62956: {name:'Alioth', },
-    HIP67301: {name:'Alkaid', },
-    HIP102098:{name:'Deneb', },
-    HIP91262: {name:'Vega', },
-    HIP97649: {name:'Altair', },
-    HIP36850: {name:'Castor', },
-    HIP37826: {name:'Pollux', },
-    HIP113368:{name:'Fomalhaut', },
-    HIP80763: {name:'Antares', },
-    HIP60718: {name:'Acrux', },
-    HIP30438: {name:'Canopus', },
-    HIP7588:  {name:'Achernar', },
-};
-
-var Messier = {
-    // Messier objects (in our catalog by their NGCnumbers)
-    NGC1952: {name: 'M1', show: true,},
-    NGC7089: {name: 'M2', show: true,},
-    NGC5272: {name: 'M3', show: true,},
-    NGC6121: {name: 'M4', show: true,},
-    NGC5904: {name: 'M5', show: true,},
-    NGC6405: {name: 'M6', show: true,},
-    NGC6475: {name: 'M7', show: true,},
-    NGC6523: {name: 'M8', show: true,},
-    NGC6333: {name: 'M9', show: true,},
-    NGC6254: {name: 'M10', show: true,},
-    NGC6705: {name: 'M11', show: true,},
-    NGC6218: {name: 'M12', show: true,},
-    NGC6205: {name: 'M13', show: true,},
-    NGC6402: {name: 'M14', show: true,},
-    NGC7078: {name: 'M15', show: true,},
-    NGC6611: {name: 'M16', show: true,},
-    NGC6618: {name: 'M17', show: true,},
-    NGC6613: {name: 'M18', show: true,},
-    NGC6273: {name: 'M19', show: true,},
-    NGC6514: {name: 'M20', show: true,},
-    NGC6531: {name: 'M21', show: true,},
-    NGC6656: {name: 'M22', show: true,},
-    NGC6494: {name: 'M23', show: true,},
-    IC4715: {name: 'M24', show: true,},
-    IC4725: {name: 'M25', show: true,},
-    NGC6694: {name: 'M26', show: true,},
-    NGC6853: {name: 'M27', show: true,},
-    NGC6626: {name: 'M28', show: true,},
-    NGC6913: {name: 'M29', show: true,},
-    NGC7099: {name: 'M30', show: true,},
-    NGC224: {name: 'M31', show: true,},
-    NGC221: {name: 'M32', show: true,},
-    NGC598: {name: 'M33', show: true,},
-    NGC1039: {name: 'M34', show: true,},
-    NGC2168: {name: 'M35', show: true,},
-    NGC1960: {name: 'M36', show: true,},
-    NGC2099: {name: 'M37', show: true,},
-    NGC1912: {name: 'M38', show: true,},
-    NGC7092: {name: 'M39', show: true,},
-    NGC2287: {name: 'M41', show: true,},
-    NGC1976: {name: 'M42', show: true,},
-    NGC1982: {name: 'M43', show: true,},
-    NGC2632: {name: 'M44', show: true,},
-    NCG1432: {name: 'M45', show: true,},
-    NGC1435: {name: 'M45', show: true,},
-    NGC2437: {name: 'M46', show: true,},
-    NGC2422: {name: 'M47', show: true,},
-    NGC2548: {name: 'M48', show: true,},
-    NGC4472: {name: 'M49', show: true,},
-    NGC2323: {name: 'M50', show: true,},
-    NGC5194: {name: 'M51', show: true,},
-    NGC5195: {name: 'M51', show: true,},
-    NGC7654: {name: 'M52', show: true,},
-    NGC5024: {name: 'M53', show: true,},
-    NGC6715: {name: 'M54', show: true,},
-    NGC6809: {name: 'M55', show: true,},
-    NGC6779: {name: 'M56', show: true,},
-    NGC6720: {name: 'M57', show: true,},
-    NGC4579: {name: 'M58', show: true,},
-    NGC4621: {name: 'M59', show: true,},
-    NGC4649: {name: 'M60', show: true,},
-    NGC4303: {name: 'M61', show: true,},
-    NGC6266: {name: 'M62', show: true,},
-    NGC5055: {name: 'M63', show: true,},
-    NGC4826: {name: 'M64', show: true,},
-    NGC3623: {name: 'M65', show: true,},
-    NGC3627: {name: 'M66', show: true,},
-    NGC2682: {name: 'M67', show: true,},
-    NGC4590: {name: 'M68', show: true,},
-    NGC6637: {name: 'M69', show: true,},
-    NGC6681: {name: 'M70', show: true,},
-    NGC6838: {name: 'M71', show: true,},
-    NGC6981: {name: 'M72', show: true,},
-    NGC6994: {name: 'M73', show: true,},
-    NGC628: {name: 'M74', show: true,},
-    NGC6864: {name: 'M75', show: true,},
-    NGC650: {name: 'M76', show: true,},
-    NGC651: {name: 'M76', show: true,},
-    NGC1068: {name: 'M77', show: true,},
-    // NGC2064: {name: 'M78', show: true,},
-    // NGC2067: {name: 'M78', show: true,},
-    NGC2068: {name: 'M78', show: true,},
-    NGC2071: {name: 'M78', show: true,},
-    NGC1904: {name: 'M79', show: true,},
-    NGC6093: {name: 'M80', show: true,},
-    NGC3031: {name: 'M81', show: true,},
-    NGC3034: {name: 'M82', show: true,},
-    NGC5236: {name: 'M83', show: true,},
-    NGC4374: {name: 'M84', show: true,},
-    NGC4382: {name: 'M85', show: true,},
-    NGC4406: {name: 'M86', show: true,},
-    NGC4486: {name: 'M87', show: true,},
-    NGC4501: {name: 'M88', show: true,},
-    NGC4552: {name: 'M89', show: true,},
-    NGC4569: {name: 'M90', show: true,},
-    NGC4548: {name: 'M91', show: true,},
-    NGC6341: {name: 'M92', show: true,},
-    NGC2447: {name: 'M93', show: true,},
-    NGC4736: {name: 'M94', show: true,},
-    NGC3351: {name: 'M95', show: true,},
-    NGC3368: {name: 'M96', show: true,},
-    NGC3587: {name: 'M97', show: true,},
-    NGC4192: {name: 'M98', show: true,},
-    NGC4254: {name: 'M99', show: true,},
-    NGC4321: {name: 'M100', show: true,},
-    NGC5457: {name: 'M101', show: true,},
-    NGC581: {name: 'M103', show: true,},
-    NGC4594: {name: 'M104', show: true,},
-    NGC3379: {name: 'M105', show: true,},
-    NGC4258: {name: 'M106', show: true,},
-    NGC6171: {name: 'M107', show: true,},
-    NGC3556: {name: 'M108', show: true,},
-    NGC3992: {name: 'M109', show: true,},
-    NGC205: {name: 'M110', show: true,},
-};
-
-var InterestingObjects = {
-    // Interesting NGCobjects worth labeling (from SEDS)
-    NGC104: {name: 'NGC104',},
-    NGC188: {name: 'NGC188',},
-    NGC189: {name: 'NGC189',},
-    NGC206: {name: 'NGC206',},
-    NGC225: {name: 'NGC225',},
-    NGC253: {name: 'NGC253',},
-    NGC292: {name: 'NGC292',},
-    NGC381: {name: 'NGC381',},
-    NGC595: {name: 'NGC595',},
-    NGC604: {name: 'NGC604',},
-    NGC659: {name: 'NGC659',},
-    NGC752: {name: 'NGC752',},
-    NGC869: {name: 'NGC869',},
-    NGC884: {name: 'NGC884',},
-    NGC891: {name: 'NGC891',},
-    NGC1055: {name: 'NGC1055',},
-    NGC1432: {name: 'NGC1432',},
-    NGC1435: {name: 'NGC1435',},
-    NGC2023: {name: 'NGC2023',},
-    NGC2070: {name: 'NGC2070',},
-    NGC2169: {name: 'NGC2169',},
-    NGC2175: {name: 'NGC2175',},
-    NGC2204: {name: 'NGC2204',},
-    NGC2237: {name: 'NGC2237',},
-    NGC2238: {name: 'NGC2238',},
-    NGC2239: {name: 'NGC2239',},
-    NGC2244: {name: 'NGC2244',},
-    NGC2246: {name: 'NGC2246',},
-    NGC2264: {name: 'NGC2264',},
-    NGC2349: {name: 'NGC2349',},
-    NGC2360: {name: 'NGC2360',},
-    NGC2362: {name: 'NGC2362',},
-    NGC2403: {name: 'NGC2403',},
-    NGC2419: {name: 'NGC2419',},
-    NGC2438: {name: 'NGC2438',},
-    NGC2451: {name: 'NGC2451',},
-    NGC2477: {name: 'NGC2477',},
-    NGC2516: {name: 'NGC2516',},
-    NGC2546: {name: 'NGC2546',},
-    NGC2547: {name: 'NGC2547',},
-    NGC2903: {name: 'NGC2903',},
-    NGC2976: {name: 'NGC2976',},
-    NGC3077: {name: 'NGC3077',},
-    NGC3115: {name: 'NGC3115',},
-    NGC3228: {name: 'NGC3228',},
-    NGC3293: {name: 'NGC3293',},
-    NGC3372: {name: 'NGC3372',},
-    NGC3532: {name: 'NGC3532',},
-    NGC3628: {name: 'NGC3628',},
-    NGC3766: {name: 'NGC3766',},
-    NGC3953: {name: 'NGC3953',},
-    NGC4565: {name: 'NGC4565',},
-    NGC4571: {name: 'NGC4571',},
-    NGC4631: {name: 'NGC4631',},
-    NGC4656: {name: 'NGC4656',},
-    NGC4755: {name: 'NGC4755',},
-    NGC4833: {name: 'NGC4833',},
-    NGC5128: {name: 'NGC5128',},
-    NGC5139: {name: 'NGC5139',},
-    NGC5195: {name: 'NGC5195',},
-    NGC5281: {name: 'NGC5281',},
-    NGC5662: {name: 'NGC5662',},
-    NGC5907: {name: 'NGC5907',},
-    NGC6025: {name: 'NGC6025',},
-    NGC6124: {name: 'NGC6124',},
-    NGC6231: {name: 'NGC6231',},
-    NGC6242: {name: 'NGC6242',},
-    NGC6397: {name: 'NGC6397',},
-    NGC6530: {name: 'NGC6530',},
-    NGC6543: {name: 'NGC6543',},
-    NGC6603: {name: 'NGC6603',},
-    NGC6633: {name: 'NGC6633',},
-    NGC6712: {name: 'NGC6712',},
-    NGC6819: {name: 'NGC6819',},
-    NGC6822: {name: 'NGC6822',},
-    NGC6866: {name: 'NGC6866',},
-    NGC6946: {name: 'NGC6946',},
-    NGC7000: {name: 'NGC7000',},
-    NGC7009: {name: 'NGC7009',},
-    NGC7293: {name: 'NGC7293',},
-    NGC7331: {name: 'NGC7331',},
-    NGC7380: {name: 'NGC7380',},
-    NGC7479: {name: 'NGC7479',},
-    NGC7789: {name: 'NGC7789',},
-    IC10: {name: 'IC10',},
-    IC349: {name: 'IC349',},
-    IC434: {name: 'IC434',},
-    IC1434: {name: 'IC1434',},
-    IC2391: {name: 'IC2391',},
-    IC2395: {name: 'IC2395',},
-    IC2488: {name: 'IC2488',},
-    IC2602: {name: 'IC2602',},
-    IC4665: {name: 'IC4665',},
-    IC5152: {name: 'IC5152',},
-};
 
 
 function ObservationChart(selection, options) {
@@ -344,9 +98,8 @@ function ObservationChart(selection, options) {
         base.options = base.utils.extend({}, base.defaultOptions, base.options, options);
 
         // Set up the chart's date/time
-        base.datetime = base.options.date;
-        if (base.options.time > 0)
-            base.datetime.setHours(base.options.time, 0, 0, 0);
+        // base.datetime = base.options.date;
+        base.datetime = new Date();
 
         // Set the SVG width/height
         base.width = base.utils.width();
@@ -365,25 +118,26 @@ function ObservationChart(selection, options) {
         base.projection.rotate(base.utils.zenith());
 
         // Set up zooming
-        if (base.options.zoom.zoomable) {
-            base.zoom = d3.behavior.zoom()
-                .translate([0, 0])
-                .scale(base.options.scale)
-                .scaleExtent([base.options.scale, base.options.zoom.extent])
-                .size([base.width, base.height])
-                .on("zoom", function() {
-                    var transform_attr = "translate(" + (d3.event.translate[0] + base.margin.left) + "," + (d3.event.translate[1] + base.margin.top) + ")scale(" + d3.event.scale + ")";
+        base.zoom = d3.behavior.zoom()
+            .translate([0, 0])
+            .scale(base.options.scale)
+            .scaleExtent([base.options.scale, base.options.zoom.extent])
+            .size([base.width, base.height])
+            .on("zoom", function() {
+                if (!base.options.zoom.zoomable)
+                    return;
 
-                    base.lines_group.attr("transform", transform_attr);
-                    base.chart_group.attr("transform", transform_attr);
-                    base.const_group.attr("transform", transform_attr);
-                    base.obj_group.attr("transform", transform_attr);
-                    base.star_group.attr("transform", transform_attr);
-                    base.solarsystem_group.attr("transform", transform_attr);
-                    base.label_group.attr("transform", transform_attr);
-                    });
-            base.svg.call(base.zoom);
-        }
+                var transform_attr = "translate(" + (d3.event.translate[0] + base.margin.left) + "," + (d3.event.translate[1] + base.margin.top) + ")scale(" + d3.event.scale + ")";
+
+                base.lines_group.attr("transform", transform_attr);
+                base.chart_group.attr("transform", transform_attr);
+                base.const_group.attr("transform", transform_attr);
+                base.obj_group.attr("transform", transform_attr);
+                base.star_group.attr("transform", transform_attr);
+                base.solarsystem_group.attr("transform", transform_attr);
+                base.label_group.attr("transform", transform_attr);
+                });
+        base.svg.call(base.zoom);
 
         // Draw the chart
         base.draw();
@@ -473,6 +227,9 @@ function ObservationChart(selection, options) {
     };
         
     base.drawZenith = function() {
+        if (!base.options.zenith.show)
+            return;
+
         var feature = [base.utils.zenithFeature()];
         base.path.pointRadius(2);
         
@@ -509,6 +266,9 @@ function ObservationChart(selection, options) {
     };
 
     base.drawEcliptic = function() {
+        if (!base.options.ecliptic)
+            return;
+
         // Construct and points of the ecliptic
         var epsilon = 23.44 * PI_OVER_180;
         var cos_epsilon = Math.cos(epsilon);
@@ -550,7 +310,10 @@ function ObservationChart(selection, options) {
     base.drawInformation = function() {
         // If we're set to a specific center ra/dec, we're not going
         // to draw direction labels at this time.
-        if(base.options.center)
+        if (base.options.center.ra && base.options.center.dec)
+            return;
+
+        if (!base.options.information)
             return;
 
         var bbox = base.globe.node().getBBox();
@@ -594,31 +357,34 @@ function ObservationChart(selection, options) {
         //http://www.stjarnhimlen.se/comp/ppcomp.html
 
         // Sun
-        var sunFeature = base.utils.sunFeature();
-        base.path.pointRadius(function(d) { return 20; });
-        base.solarsystem_group.selectAll('path.star')
-            .data([sunFeature])
-            .enter().append('path')
-            .attr('class', 'star')
-            .attr('id', 'sun')
-            .attr('d', base.path);
-        base.drawLabelsForObjects([sunFeature], 'sun-label', 
-                function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1] - 30; });
-
+        if (base.options.solar.sun) {
+            var sunFeature = base.utils.sunFeature();
+            base.path.pointRadius(function(d) { return 20; });
+            base.solarsystem_group.selectAll('path.star')
+                .data([sunFeature])
+                .enter().append('path')
+                .attr('class', 'star')
+                .attr('id', 'sun')
+                .attr('d', base.path);
+            base.drawLabelsForObjects([sunFeature], 'sun-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - 30; });
+        }
         // Moon 
-        var moonFeature = base.utils.moonFeature();
-        base.path.pointRadius(function(d) { return 8; });
-        base.solarsystem_group.selectAll('path.planetary')
-            .data([moonFeature])
-            .enter().append('path')
-            .attr('class', 'planetary')
-            .attr('id', 'moon')
-            .attr('d', base.path);
-        base.drawLabelsForObjects([moonFeature], 'moon-label', 
-                function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1] - 12; });
-        
+        if (base.options.solar.moon) {
+            var moonFeature = base.utils.moonFeature();
+            base.path.pointRadius(function(d) { return 8; });
+            base.solarsystem_group.selectAll('path.planetary')
+                .data([moonFeature])
+                .enter().append('path')
+                .attr('class', 'planetary')
+                .attr('id', 'moon')
+                .attr('d', base.path);
+            base.drawLabelsForObjects([moonFeature], 'moon-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1] - 12; });
+        }
+
 
     };
         
@@ -626,14 +392,16 @@ function ObservationChart(selection, options) {
         // Handle errors getting and parsing the data
         if (error) { console.log(error); return error; }
 
-        base.const_group.selectAll('path.constellation').data(data.features)
-            .enter().append('path')
-            .attr('class', 'constellation')
-            .attr('d', base.path);
+        if (base.options.constellations.draw) 
+            base.const_group.selectAll('path.constellation').data(data.features)
+                .enter().append('path')
+                .attr('class', 'constellation')
+                .attr('d', base.path);
 
-        base.drawLabelsForObjects(data.features, 'constellation-label', 
-                function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1]; });
+        if (base.options.constellations.label) 
+            base.drawLabelsForObjects(data.features, 'constellation-label', 
+                    function(d) { return base.path.centroid(d)[0]; },
+                    function(d) { return base.path.centroid(d)[1]; });
 
     };
 
@@ -644,7 +412,6 @@ function ObservationChart(selection, options) {
         var stars = data.features.filter(function(d) {
             return d.properties.magnitude <= base.options.stars.magnitude;
         });
-
 
         // Compute the radius scale. The radius will be proportional to
         // the aparent magnitude
@@ -1089,7 +856,7 @@ function ObservationChart(selection, options) {
         
     // Julian Day
     base.utils.julianDay = function(date) {
-        if(!date) date = base.options.date;
+        if(!date) date = base.options.datetime;
         return ( date.getTime() / 86400000.0 ) + 2440587.5;
     };
 
@@ -1235,7 +1002,7 @@ function ObservationChart(selection, options) {
     }; 
 
     base.utils.zenith = function() {
-        if(!base.options.center) {
+        if (!base.options.center.ra && !base.options.center.dec) {
             var date = base.datetime;
             var location = base.options.location;
             var dec = -1 * location.latitude;
@@ -1279,12 +1046,7 @@ function ObservationChart(selection, options) {
         },
 
         // The date to be charted. Defaults to 'now'.
-        date: new Date(),
-
-        // If you want a specific hour on whatever date 'today' happens
-        // to be, set it here
-        // time: 21,
-        time: undefined,
+        datetime: new Date(),
 
         // The location from which the sky is observered
         location: {
@@ -1298,11 +1060,10 @@ function ObservationChart(selection, options) {
         // that you can see the entire sphere, this will effect its
         // rotation.
         // RA is presumed in decimal hours, dec in degrees.
-        center: undefined,
-        // center: {
-        //     ra: 5.8,
-        //     dec: 0.0 
-        // },
+        center: {
+            ra: undefined,
+            dec: undefined
+        },
 
         // Chart Features
         graticule: true,
@@ -1311,16 +1072,27 @@ function ObservationChart(selection, options) {
             size: 5
         },
         ecliptic: true,
+        information: true,
 
         data: {
             constellations: 'data/constellations.json',
             objects: 'data/objects.json',
-            stars: 'data/stars.json'
+            stars: 'data/starsHD.json'
         },
 
         // Solar System
+        solar: {
+            moon: true,
+            sun: true,
+            planets: true
+        },
 
         // Sky
+        constellations: {
+            draw: true,
+            label: true,
+        },
+
         stars: {
             magnitude: 5,
             scale: [6, 0.25],
@@ -1359,16 +1131,380 @@ function ObservationChart(selection, options) {
         },
 
         // Override settings/label for any given object
-        overrides: base.utils.extend({}, BrightStars, Messier, InterestingObjects),
+        // overrides: base.utils.extend({}, BrightStars, Messier, InterestingObjects),
+        overrides: {}
 
     };
     
-    console.log(base.utils.extend({}, base.defaultOptions));
-
     // Run initializer
     base.init();
 
     // Return the object
     return base;
-}
+};
+
+ObservationChart.BrightStarOverrides = {
+    // Bright, common named stars
+    HIP24436: {name:'Rigel', },
+    HIP27989: {name:'Betelgeuse', },
+    HIP32349: {name:'Sirius', },
+    HIP37279: {name:'Procyon', },
+    HIP24608: {name:'Capella', },
+    HIP5447:  {name:'Mirach', },
+    HIP14576: {name:'Algol', },
+    HIP21421: {name:'Aldebaran', },
+    HIP10826: {name:'Mira', },
+    HIP49669: {name:'Regulus', },
+    HIP57632: {name:'Denebola', },
+    HIP65474: {name:'Spica', },
+    HIP69673: {name:'Arcturus', },
+    HIP11767: {name:'Polaris', },
+    HIP54061: {name:'Dubhe', },
+    HIP62956: {name:'Alioth', },
+    HIP67301: {name:'Alkaid', },
+    HIP102098:{name:'Deneb', },
+    HIP91262: {name:'Vega', },
+    HIP97649: {name:'Altair', },
+    HIP36850: {name:'Castor', },
+    HIP37826: {name:'Pollux', },
+    HIP113368:{name:'Fomalhaut', },
+    HIP80763: {name:'Antares', },
+    HIP60718: {name:'Acrux', },
+    HIP30438: {name:'Canopus', },
+    HIP7588:  {name:'Achernar', },
+};
+
+ObservationChart.MessierOverrides = {
+    // Messier objects (in our catalog by their NGCnumbers)
+    NGC1952: {name: 'M1'},
+    NGC7089: {name: 'M2'},
+    NGC5272: {name: 'M3'},
+    NGC6121: {name: 'M4'},
+    NGC5904: {name: 'M5'},
+    NGC6405: {name: 'M6'},
+    NGC6475: {name: 'M7'},
+    NGC6523: {name: 'M8'},
+    NGC6333: {name: 'M9'},
+    NGC6254: {name: 'M10'},
+    NGC6705: {name: 'M11'},
+    NGC6218: {name: 'M12'},
+    NGC6205: {name: 'M13'},
+    NGC6402: {name: 'M14'},
+    NGC7078: {name: 'M15'},
+    NGC6611: {name: 'M16'},
+    NGC6618: {name: 'M17'},
+    NGC6613: {name: 'M18'},
+    NGC6273: {name: 'M19'},
+    NGC6514: {name: 'M20'},
+    NGC6531: {name: 'M21'},
+    NGC6656: {name: 'M22'},
+    NGC6494: {name: 'M23'},
+    IC4715: {name: 'M24'},
+    IC4725: {name: 'M25'},
+    NGC6694: {name: 'M26'},
+    NGC6853: {name: 'M27'},
+    NGC6626: {name: 'M28'},
+    NGC6913: {name: 'M29'},
+    NGC7099: {name: 'M30'},
+    NGC224: {name: 'M31'},
+    NGC221: {name: 'M32'},
+    NGC598: {name: 'M33'},
+    NGC1039: {name: 'M34'},
+    NGC2168: {name: 'M35'},
+    NGC1960: {name: 'M36'},
+    NGC2099: {name: 'M37'},
+    NGC1912: {name: 'M38'},
+    NGC7092: {name: 'M39'},
+    NGC2287: {name: 'M41'},
+    NGC1976: {name: 'M42'},
+    NGC1982: {name: 'M43'},
+    NGC2632: {name: 'M44'},
+    NCG1432: {name: 'M45'},
+    NGC1435: {name: 'M45'},
+    NGC2437: {name: 'M46'},
+    NGC2422: {name: 'M47'},
+    NGC2548: {name: 'M48'},
+    NGC4472: {name: 'M49'},
+    NGC2323: {name: 'M50'},
+    NGC5194: {name: 'M51'},
+    NGC5195: {name: 'M51'},
+    NGC7654: {name: 'M52'},
+    NGC5024: {name: 'M53'},
+    NGC6715: {name: 'M54'},
+    NGC6809: {name: 'M55'},
+    NGC6779: {name: 'M56'},
+    NGC6720: {name: 'M57'},
+    NGC4579: {name: 'M58'},
+    NGC4621: {name: 'M59'},
+    NGC4649: {name: 'M60'},
+    NGC4303: {name: 'M61'},
+    NGC6266: {name: 'M62'},
+    NGC5055: {name: 'M63'},
+    NGC4826: {name: 'M64'},
+    NGC3623: {name: 'M65'},
+    NGC3627: {name: 'M66'},
+    NGC2682: {name: 'M67'},
+    NGC4590: {name: 'M68'},
+    NGC6637: {name: 'M69'},
+    NGC6681: {name: 'M70'},
+    NGC6838: {name: 'M71'},
+    NGC6981: {name: 'M72'},
+    NGC6994: {name: 'M73'},
+    NGC628: {name: 'M74'},
+    NGC6864: {name: 'M75'},
+    NGC650: {name: 'M76'},
+    NGC651: {name: 'M76'},
+    NGC1068: {name: 'M77'},
+    // NGC2064: {name: 'M78'},
+    // NGC2067: {name: 'M78'},
+    NGC2068: {name: 'M78'},
+    NGC2071: {name: 'M78'},
+    NGC1904: {name: 'M79'},
+    NGC6093: {name: 'M80'},
+    NGC3031: {name: 'M81'},
+    NGC3034: {name: 'M82'},
+    NGC5236: {name: 'M83'},
+    NGC4374: {name: 'M84'},
+    NGC4382: {name: 'M85'},
+    NGC4406: {name: 'M86'},
+    NGC4486: {name: 'M87'},
+    NGC4501: {name: 'M88'},
+    NGC4552: {name: 'M89'},
+    NGC4569: {name: 'M90'},
+    NGC4548: {name: 'M91'},
+    NGC6341: {name: 'M92'},
+    NGC2447: {name: 'M93'},
+    NGC4736: {name: 'M94'},
+    NGC3351: {name: 'M95'},
+    NGC3368: {name: 'M96'},
+    NGC3587: {name: 'M97'},
+    NGC4192: {name: 'M98'},
+    NGC4254: {name: 'M99'},
+    NGC4321: {name: 'M100'},
+    NGC5457: {name: 'M101'},
+    NGC581: {name: 'M103'},
+    NGC4594: {name: 'M104'},
+    NGC3379: {name: 'M105'},
+    NGC4258: {name: 'M106'},
+    NGC6171: {name: 'M107'},
+    NGC3556: {name: 'M108'},
+    NGC3992: {name: 'M109'},
+    NGC205: {name: 'M110'},
+};
+
+ObservationChart.AlwaysMessierOverrides = {
+    // Messier objects (in our catalog by their NGCnumbers)
+    NGC1952: {name: 'M1', show: true,},
+    NGC7089: {name: 'M2', show: true,},
+    NGC5272: {name: 'M3', show: true,},
+    NGC6121: {name: 'M4', show: true,},
+    NGC5904: {name: 'M5', show: true,},
+    NGC6405: {name: 'M6', show: true,},
+    NGC6475: {name: 'M7', show: true,},
+    NGC6523: {name: 'M8', show: true,},
+    NGC6333: {name: 'M9', show: true,},
+    NGC6254: {name: 'M10', show: true,},
+    NGC6705: {name: 'M11', show: true,},
+    NGC6218: {name: 'M12', show: true,},
+    NGC6205: {name: 'M13', show: true,},
+    NGC6402: {name: 'M14', show: true,},
+    NGC7078: {name: 'M15', show: true,},
+    NGC6611: {name: 'M16', show: true,},
+    NGC6618: {name: 'M17', show: true,},
+    NGC6613: {name: 'M18', show: true,},
+    NGC6273: {name: 'M19', show: true,},
+    NGC6514: {name: 'M20', show: true,},
+    NGC6531: {name: 'M21', show: true,},
+    NGC6656: {name: 'M22', show: true,},
+    NGC6494: {name: 'M23', show: true,},
+    IC4715: {name: 'M24', show: true,},
+    IC4725: {name: 'M25', show: true,},
+    NGC6694: {name: 'M26', show: true,},
+    NGC6853: {name: 'M27', show: true,},
+    NGC6626: {name: 'M28', show: true,},
+    NGC6913: {name: 'M29', show: true,},
+    NGC7099: {name: 'M30', show: true,},
+    NGC224: {name: 'M31', show: true,},
+    NGC221: {name: 'M32', show: true,},
+    NGC598: {name: 'M33', show: true,},
+    NGC1039: {name: 'M34', show: true,},
+    NGC2168: {name: 'M35', show: true,},
+    NGC1960: {name: 'M36', show: true,},
+    NGC2099: {name: 'M37', show: true,},
+    NGC1912: {name: 'M38', show: true,},
+    NGC7092: {name: 'M39', show: true,},
+    NGC2287: {name: 'M41', show: true,},
+    NGC1976: {name: 'M42', show: true,},
+    NGC1982: {name: 'M43', show: true,},
+    NGC2632: {name: 'M44', show: true,},
+    NCG1432: {name: 'M45', show: true,},
+    NGC1435: {name: 'M45', show: true,},
+    NGC2437: {name: 'M46', show: true,},
+    NGC2422: {name: 'M47', show: true,},
+    NGC2548: {name: 'M48', show: true,},
+    NGC4472: {name: 'M49', show: true,},
+    NGC2323: {name: 'M50', show: true,},
+    NGC5194: {name: 'M51', show: true,},
+    NGC5195: {name: 'M51', show: true,},
+    NGC7654: {name: 'M52', show: true,},
+    NGC5024: {name: 'M53', show: true,},
+    NGC6715: {name: 'M54', show: true,},
+    NGC6809: {name: 'M55', show: true,},
+    NGC6779: {name: 'M56', show: true,},
+    NGC6720: {name: 'M57', show: true,},
+    NGC4579: {name: 'M58', show: true,},
+    NGC4621: {name: 'M59', show: true,},
+    NGC4649: {name: 'M60', show: true,},
+    NGC4303: {name: 'M61', show: true,},
+    NGC6266: {name: 'M62', show: true,},
+    NGC5055: {name: 'M63', show: true,},
+    NGC4826: {name: 'M64', show: true,},
+    NGC3623: {name: 'M65', show: true,},
+    NGC3627: {name: 'M66', show: true,},
+    NGC2682: {name: 'M67', show: true,},
+    NGC4590: {name: 'M68', show: true,},
+    NGC6637: {name: 'M69', show: true,},
+    NGC6681: {name: 'M70', show: true,},
+    NGC6838: {name: 'M71', show: true,},
+    NGC6981: {name: 'M72', show: true,},
+    NGC6994: {name: 'M73', show: true,},
+    NGC628: {name: 'M74', show: true,},
+    NGC6864: {name: 'M75', show: true,},
+    NGC650: {name: 'M76', show: true,},
+    NGC651: {name: 'M76', show: true,},
+    NGC1068: {name: 'M77', show: true,},
+    // NGC2064: {name: 'M78', show: true,},
+    // NGC2067: {name: 'M78', show: true,},
+    NGC2068: {name: 'M78', show: true,},
+    NGC2071: {name: 'M78', show: true,},
+    NGC1904: {name: 'M79', show: true,},
+    NGC6093: {name: 'M80', show: true,},
+    NGC3031: {name: 'M81', show: true,},
+    NGC3034: {name: 'M82', show: true,},
+    NGC5236: {name: 'M83', show: true,},
+    NGC4374: {name: 'M84', show: true,},
+    NGC4382: {name: 'M85', show: true,},
+    NGC4406: {name: 'M86', show: true,},
+    NGC4486: {name: 'M87', show: true,},
+    NGC4501: {name: 'M88', show: true,},
+    NGC4552: {name: 'M89', show: true,},
+    NGC4569: {name: 'M90', show: true,},
+    NGC4548: {name: 'M91', show: true,},
+    NGC6341: {name: 'M92', show: true,},
+    NGC2447: {name: 'M93', show: true,},
+    NGC4736: {name: 'M94', show: true,},
+    NGC3351: {name: 'M95', show: true,},
+    NGC3368: {name: 'M96', show: true,},
+    NGC3587: {name: 'M97', show: true,},
+    NGC4192: {name: 'M98', show: true,},
+    NGC4254: {name: 'M99', show: true,},
+    NGC4321: {name: 'M100', show: true,},
+    NGC5457: {name: 'M101', show: true,},
+    NGC581: {name: 'M103', show: true,},
+    NGC4594: {name: 'M104', show: true,},
+    NGC3379: {name: 'M105', show: true,},
+    NGC4258: {name: 'M106', show: true,},
+    NGC6171: {name: 'M107', show: true,},
+    NGC3556: {name: 'M108', show: true,},
+    NGC3992: {name: 'M109', show: true,},
+    NGC205: {name: 'M110', show: true,},
+};
+
+ObservationChart.InterestingObjectOverrides = {
+    // Interesting NGCobjects worth labeling (from SEDS)
+    NGC104: {name: 'NGC104',},
+    NGC188: {name: 'NGC188',},
+    NGC189: {name: 'NGC189',},
+    NGC206: {name: 'NGC206',},
+    NGC225: {name: 'NGC225',},
+    NGC253: {name: 'NGC253',},
+    NGC292: {name: 'NGC292',},
+    NGC381: {name: 'NGC381',},
+    NGC595: {name: 'NGC595',},
+    NGC604: {name: 'NGC604',},
+    NGC659: {name: 'NGC659',},
+    NGC752: {name: 'NGC752',},
+    NGC869: {name: 'NGC869',},
+    NGC884: {name: 'NGC884',},
+    NGC891: {name: 'NGC891',},
+    NGC1055: {name: 'NGC1055',},
+    NGC1432: {name: 'NGC1432',},
+    NGC1435: {name: 'NGC1435',},
+    NGC2023: {name: 'NGC2023',},
+    NGC2070: {name: 'NGC2070',},
+    NGC2169: {name: 'NGC2169',},
+    NGC2175: {name: 'NGC2175',},
+    NGC2204: {name: 'NGC2204',},
+    NGC2237: {name: 'NGC2237',},
+    NGC2238: {name: 'NGC2238',},
+    NGC2239: {name: 'NGC2239',},
+    NGC2244: {name: 'NGC2244',},
+    NGC2246: {name: 'NGC2246',},
+    NGC2264: {name: 'NGC2264',},
+    NGC2349: {name: 'NGC2349',},
+    NGC2360: {name: 'NGC2360',},
+    NGC2362: {name: 'NGC2362',},
+    NGC2403: {name: 'NGC2403',},
+    NGC2419: {name: 'NGC2419',},
+    NGC2438: {name: 'NGC2438',},
+    NGC2451: {name: 'NGC2451',},
+    NGC2477: {name: 'NGC2477',},
+    NGC2516: {name: 'NGC2516',},
+    NGC2546: {name: 'NGC2546',},
+    NGC2547: {name: 'NGC2547',},
+    NGC2903: {name: 'NGC2903',},
+    NGC2976: {name: 'NGC2976',},
+    NGC3077: {name: 'NGC3077',},
+    NGC3115: {name: 'NGC3115',},
+    NGC3228: {name: 'NGC3228',},
+    NGC3293: {name: 'NGC3293',},
+    NGC3372: {name: 'NGC3372',},
+    NGC3532: {name: 'NGC3532',},
+    NGC3628: {name: 'NGC3628',},
+    NGC3766: {name: 'NGC3766',},
+    NGC3953: {name: 'NGC3953',},
+    NGC4565: {name: 'NGC4565',},
+    NGC4571: {name: 'NGC4571',},
+    NGC4631: {name: 'NGC4631',},
+    NGC4656: {name: 'NGC4656',},
+    NGC4755: {name: 'NGC4755',},
+    NGC4833: {name: 'NGC4833',},
+    NGC5128: {name: 'NGC5128',},
+    NGC5139: {name: 'NGC5139',},
+    NGC5195: {name: 'NGC5195',},
+    NGC5281: {name: 'NGC5281',},
+    NGC5662: {name: 'NGC5662',},
+    NGC5907: {name: 'NGC5907',},
+    NGC6025: {name: 'NGC6025',},
+    NGC6124: {name: 'NGC6124',},
+    NGC6231: {name: 'NGC6231',},
+    NGC6242: {name: 'NGC6242',},
+    NGC6397: {name: 'NGC6397',},
+    NGC6530: {name: 'NGC6530',},
+    NGC6543: {name: 'NGC6543',},
+    NGC6603: {name: 'NGC6603',},
+    NGC6633: {name: 'NGC6633',},
+    NGC6712: {name: 'NGC6712',},
+    NGC6819: {name: 'NGC6819',},
+    NGC6822: {name: 'NGC6822',},
+    NGC6866: {name: 'NGC6866',},
+    NGC6946: {name: 'NGC6946',},
+    NGC7000: {name: 'NGC7000',},
+    NGC7009: {name: 'NGC7009',},
+    NGC7293: {name: 'NGC7293',},
+    NGC7331: {name: 'NGC7331',},
+    NGC7380: {name: 'NGC7380',},
+    NGC7479: {name: 'NGC7479',},
+    NGC7789: {name: 'NGC7789',},
+    IC10: {name: 'IC10',},
+    IC349: {name: 'IC349',},
+    IC434: {name: 'IC434',},
+    IC1434: {name: 'IC1434',},
+    IC2391: {name: 'IC2391',},
+    IC2395: {name: 'IC2395',},
+    IC2488: {name: 'IC2488',},
+    IC2602: {name: 'IC2602',},
+    IC4665: {name: 'IC4665',},
+    IC5152: {name: 'IC5152',},
+};
 

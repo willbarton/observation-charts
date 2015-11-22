@@ -1,0 +1,92 @@
+<html>
+  <head>
+    <title>Observation Charts</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <link rel="stylesheet" type="text/css" href="css/chart-base.css">
+    <style type="text/css">
+    </style>    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+        <h1>Observation Charts</h1>
+        <p class="lead">Observation Charts is a JavaScript package to draw SVG star charts.</p>
+        <div class="alert alert-warning" role="alert">Observation Charts is a work in progress and subject to change without notice, rhyme, or reason.</div>
+      </div>
+      <div class="row">
+        <p>Observation Charts can be used to draw full-sky charts for a given center RA/declination or for a given latitude/longitude at a given date and time:</p>
+      </div>
+      <div class="row text-center">
+        <div id="full-sky"></div>
+      </div>
+      <div class="row">
+        <pre>
+&lt;div id="full-sky"&gt;&lt;/div&gt;
+...
+new ObservationChart(d3.select('#full-sky')[0][0], {
+    size: {
+        width: 800,
+        height: 800,
+    }
+});
+          </pre>
+      </div>        
+      <div class="row">
+        <p>Observation Charts can also be draw only specific regions with a given center RA/dec and a particular scale/size configuration:</p>
+      </div>
+      <div class="row text-center">
+        <div id="orion"></div>
+      </div>
+      <div class="row">
+        <pre>
+&lt;div id="orion"&gt;&lt;/div&gt;
+...
+new ObservationChart(d3.select('#orion')[0][0], {
+    size: {
+        width: 400,
+        height: 400,
+    },
+    center: {
+        ra: 5.8,
+        dec: 0.0 
+    },
+    scale: 4,
+    zoom: {
+        zoomable: false
+    }
+});
+          </pre>
+      
+    </div>
+
+    <script src="js/d3.min.js" charset="utf-8"></script>
+    <script src="js/date.min.js" charset="utf-8"></script>
+    
+    <script src="js/chart.js" charset="utf-8"/>
+    <script></script>
+    <script>
+      new ObservationChart('#full-sky', {
+          size: {
+              width: 800,
+              height: 800,
+          }
+      });
+      new ObservationChart('#orion', {
+          size: {
+              width: 400,
+              height: 400,
+          },
+          center: {
+              ra: 5.8,
+              dec: 0.0 
+          },
+          scale: 4,
+          zoom: {
+              zoomable: false
+          }
+      });
+    </script>
+  </body>
+</html>
+

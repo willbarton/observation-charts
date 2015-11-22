@@ -8,7 +8,7 @@ setup(
     author_email='g@gulielmus.com',
     description='',
     long_description=open('README.md').read(),
-    url='https://github.com/gulielmus/observation-charts',
+    url='https://github.com/willbarton/observation-charts',
     packages=find_packages(),
     zip_safe=False,
 
