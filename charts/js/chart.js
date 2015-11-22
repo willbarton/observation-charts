@@ -52,6 +52,7 @@ function ObservationChart(selection, options) {
         // Select our container and create the SVG element.
         base.container = base.selection;
         base.svg = base.container.append('svg').attr('class', 'observation-chart');
+        base.svg.attr('style', 'background-color: white;');
 
         // Create our groups.
         base.lines_group = base.svg.append('g')
@@ -96,8 +97,7 @@ function ObservationChart(selection, options) {
         base.options = base.utils.extend({}, base.defaultOptions, base.options, options);
 
         // Set up the chart's date/time
-        // base.datetime = base.options.date;
-        base.datetime = new Date();
+        base.datetime = base.options.datetime;
 
         // Set the SVG width/height
         base.width = base.utils.width();
@@ -154,7 +154,8 @@ function ObservationChart(selection, options) {
         base.globe = base.lines_group.selectAll('path.globe').data([{type: 'Sphere'}])
             .enter().append('path')
             .attr('class', 'globe')
-            .attr('d', base.path);
+            .attr('d', base.path)
+            .attr('style', 'fill: white; stroke-width: 0.5; stroke: rgb(35, 31, 32);');
         
         // Graticule
         base.graticule = d3.geo.graticule();
@@ -164,7 +165,8 @@ function ObservationChart(selection, options) {
             base.lines_group.selectAll('path.graticule').data([base.graticule()])
                 .enter().append('path')
                 .attr('class', 'graticule')
-                .attr('d', base.path);
+                .attr('d', base.path)
+                .attr('style', 'fill: none; stroke-width: 0.25; stroke: rgba(35, 31, 32, 0.25)');
         }
 
         // Draw other chart features
@@ -194,7 +196,7 @@ function ObservationChart(selection, options) {
 
     // Draw labels for the given objects with the given css class
     // and with the given functions for calculating dx and dy.
-    base.drawLabelsForObjects = function(objects, cssClass, x, y) {
+    base.drawLabelsForObjects = function(objects, cssClass, x, y, style) {
         var center_projected = base.path.centroid(base.utils.zenithFeature());
 
         var labelElements = base.label_group.selectAll('text.' + cssClass)
@@ -204,7 +206,6 @@ function ObservationChart(selection, options) {
             .enter().append('text')
             .attr('id', function(d) { return d.properties.id + '-label'; })
             .attr('class', cssClass + ' label')
-            .style('text-anchor', 'middle')
             .attr('transform', function(d) { 
                 // The SVG coordinate system is from the top left
                 // corner of the image. For calculating theta, we
@@ -219,6 +220,8 @@ function ObservationChart(selection, options) {
 
                 return 'translate(' + svgx + ',' + svgy + ')rotate(' + angle + ')';
             })
+            .attr('style', style)
+            .style('text-anchor', 'middle')
             .text(function(d) { return base.data.overrides(d).name; });
 
         return labelElements;
@@ -240,7 +243,8 @@ function ObservationChart(selection, options) {
             .data(feature)
             .enter().append('g')
                 .attr('id', 'zenith')
-                .attr('class', 'zenith');
+                .attr('class', 'zenith')
+                .attr('style', 'stroke: rgb(128,214,247)');
         zenithElm.append('path')
                 .attr('d', function(d) {
                     var coords = [base.projection(d.geometry.coordinates)[0],
@@ -296,7 +300,8 @@ function ObservationChart(selection, options) {
         base.chart_group.selectAll('path.ecliptic').data(ecliptic_feature)
             .enter().append('path')
             .attr('class', 'ecliptic')
-            .attr('d', base.path);
+            .attr('d', base.path)
+            .attr('style', 'fill: none; stroke-width: 0.96; stroke: rgb(128,214,247);');
         // base.drawLabelsForObjects(ecliptic_feature, 'ecliptic-label', 
         //         function(d) { return base.path.centroid(d)[0]; },
         //         function(d) { return base.path.centroid(d)[1]; });
@@ -323,6 +328,7 @@ function ObservationChart(selection, options) {
             .attr('transform', function(d) { 
                 return 'translate(' + (bbox.x + bbox.width/2) + ',' + (bbox.y + base.margin.top) + ')';
             })
+            .attr('style', 'font-size: 100%; font-family: "Trebuchet MS", Helvetica, sans-serif; text-transform: uppercase; fill: rgba(128, 214, 247, 1.0);')
             .text('N')
         base.chart_group
             .append('text')
@@ -331,6 +337,7 @@ function ObservationChart(selection, options) {
             .attr('transform', function(d) { 
                 return 'translate(' + (bbox.x + bbox.width/2) + ',' + (bbox.y + bbox.height - base.margin.top) + ')';
             })
+            .attr('style', 'font-size: 100%; font-family: "Trebuchet MS", Helvetica, sans-serif; text-transform: uppercase; fill: rgba(128, 214, 247, 1.0);')
             .text('S')
         base.chart_group
             .append('text')
@@ -339,6 +346,7 @@ function ObservationChart(selection, options) {
             .attr('transform', function(d) { 
                 return 'translate(' + (bbox.x + bbox.width - base.margin.left) + ',' + (bbox.y + bbox.height/2) + ')';
             })
+            .attr('style', 'font-size: 100%; font-family: "Trebuchet MS", Helvetica, sans-serif; text-transform: uppercase; fill: rgba(128, 214, 247, 1.0);')
             .text('W')
         base.chart_group
             .append('text')
@@ -347,6 +355,7 @@ function ObservationChart(selection, options) {
             .attr('transform', function(d) { 
                 return 'translate(' + (bbox.x + base.margin.left) + ',' + (bbox.y + bbox.height/2) + ')';
             })
+            .attr('style', 'font-size: 100%; font-family: "Trebuchet MS", Helvetica, sans-serif; text-transform: uppercase; fill: rgba(128, 214, 247, 1.0);')
             .text('E')
         
     };
@@ -366,7 +375,8 @@ function ObservationChart(selection, options) {
                 .attr('d', base.path);
             base.drawLabelsForObjects([sunFeature], 'sun-label', 
                     function(d) { return base.path.centroid(d)[0]; },
-                    function(d) { return base.path.centroid(d)[1] - 30; });
+                    function(d) { return base.path.centroid(d)[1] - 30; },
+                    'font-size: 80%; font-family: "Trebuchet MS", Helvetica, sans-serif; fill: rgba(35, 31, 32, 0.75);');
         }
         // Moon 
         if (base.options.solar.moon) {
@@ -394,13 +404,15 @@ function ObservationChart(selection, options) {
             base.const_group.selectAll('path.constellation').data(data.features)
                 .enter().append('path')
                 .attr('class', 'constellation')
-                .attr('d', base.path);
+                .attr('d', base.path)
+                .attr('style', 'fill: none; stroke-width: 0.64; stroke-linecap: butt; stroke-linejoin: miter; stroke: rgb(173,222,138); stroke-opacity: 1; stroke-miterlimit: 4;');
 
         if (base.options.constellations.label) 
             base.drawLabelsForObjects(data.features, 'constellation-label', 
                     function(d) { return base.path.centroid(d)[0]; },
-                    function(d) { return base.path.centroid(d)[1]; });
-
+                    function(d) { return base.path.centroid(d)[1]; },
+                    'fill: rgba(0, 0, 0, 0.3); font-family: "Trebuchet MS", Helvetica, sans-serif; font-size: 80%; letter-spacing: 0.2em; text-anchor: bottom; dominant-baseline:top; text-transform: uppercase; font-style: italic;');
+        
     };
 
     base.drawStars = function(error, data) {
@@ -429,11 +441,13 @@ function ObservationChart(selection, options) {
             .enter().append('path')
             .attr('class', 'star')
             .attr('id', function(d) { return d.properties.id; })
-            .attr('d', base.path);
+            .attr('d', base.path)
+            .attr('style', 'fill: black; fill-opacity: 0.9;');
 
         base.drawLabelsForObjects(stars, 'star-label', 
                 function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1] - rScale(d.properties.magnitude) * 2; });
+                function(d) { return base.path.centroid(d)[1] - rScale(d.properties.magnitude) * 2; },
+                'font-size: 80%; font-family: "Trebuchet MS", Helvetica, sans-serif; fill: rgba(35, 31, 32, 0.75);');
 
     };
 
@@ -480,10 +494,14 @@ function ObservationChart(selection, options) {
                         base.projection(d.geometry.coordinates)[0] + ',' + 
                         base.projection(d.geometry.coordinates)[1] + ')';
                 return transform;
-            });
+            })
+            .attr('style', 'fill: rgb(236, 28, 36);  fill-opacity: 0.9; stroke-width: 0.32; stroke: rgb(35,31,32);');
+              
         var galaxyLabels = base.drawLabelsForObjects(galaxies, 'galaxy-label', 
                 function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1] - galaxyMajorScale(d.properties.size[0]) * 2; });
+                function(d) { return base.path.centroid(d)[1] - galaxyMajorScale(d.properties.size[0]) * 2; },
+                'font-size: 75%; font-family: "Trebuchet MS", Helvetica, sans-serif; font-style: italic; text-transform: uppercase; fill: rgba(35, 31, 32, 0.75);');
+        
         if (base.options.galaxies.labelhover) {
             galaxyLabels.style('visibility', 'hidden');
             galaxyElms
@@ -518,10 +536,13 @@ function ObservationChart(selection, options) {
             .attr('class', 'open-cluster object')
             .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
             .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
-            .attr('r', function(d) { return openClusterMagnitudeScale(d.properties.magnitude); });
+            .attr('r', function(d) { return openClusterMagnitudeScale(d.properties.magnitude); })
+            .attr('style', 'fill: rgb(255, 242, 0); stroke-width: 0.8; stroke-linecap: round; stroke: rgb(35, 31, 32); stroke-opacity: 1; stroke-dasharray: 0, 2.5;');
+                
         var openClusterLabels = base.drawLabelsForObjects(openClusters, 'opencluster-label', 
                 function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1] - openClusterMagnitudeScale(d.properties.magnitude) * 2; });
+                function(d) { return base.path.centroid(d)[1] - openClusterMagnitudeScale(d.properties.magnitude) * 2; },
+                'font-size: 75%; font-family: "Trebuchet MS", Helvetica, sans-serif; font-style: italic; text-transform: uppercase; fill: rgba(35, 31, 32, 0.75);');
         if (base.options.globularclusters.labelhover) {
             openClusterLabels.style('visibility', 'hidden');
             openClusterElms
@@ -557,7 +578,8 @@ function ObservationChart(selection, options) {
         globularClusterElms.append('circle')
                 .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
                 .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
-                .attr('r', function(d) { return globularClusterMagnitudeScale(d.properties.magnitude); });
+                .attr('r', function(d) { return globularClusterMagnitudeScale(d.properties.magnitude); })
+                .attr('style', 'fill: rgb(255, 242, 0); stroke-width: 0.32; stroke: rgb(35,31,32);');
         globularClusterElms.append('path')
                 .attr('d', function(d) {
                     var coords = [
@@ -573,7 +595,8 @@ function ObservationChart(selection, options) {
                              coords[1]]
                              ]);
                     return line;
-                });
+                })
+                .attr('style', 'stroke-width: 0.32;  stroke: rgb(35, 31, 32);');
         globularClusterElms.append('path')
                 .attr('d', function(d) {
                     var coords = [
@@ -588,10 +611,12 @@ function ObservationChart(selection, options) {
                              coords[1]+globularClusterMagnitudeScale(
                                  d.properties.magnitude)]
                              ]);
-                });
+                })
+                .attr('style', 'stroke-width: 0.32;  stroke: rgb(35, 31, 32);');
         var globularClusterLabels = base.drawLabelsForObjects(globularClusters, 'globularcluster-label', 
                 function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1] - globularClusterMagnitudeScale(d.properties.magnitude) * 2; });
+                function(d) { return base.path.centroid(d)[1] - globularClusterMagnitudeScale(d.properties.magnitude) * 2; },
+                'font-size: 75%; font-family: "Trebuchet MS", Helvetica, sans-serif; font-style: italic; text-transform: uppercase; fill: rgba(35, 31, 32, 0.75);');
         if (base.options.globularclusters.labelhover) {
             globularClusterLabels.style('visibility', 'hidden');
             globularClusterElms
@@ -628,7 +653,8 @@ function ObservationChart(selection, options) {
         planetaryNebulaElms.append('circle')
                 .attr('cx', function(d) { return base.projection(d.geometry.coordinates)[0]; })
                 .attr('cy', function(d) { return base.projection(d.geometry.coordinates)[1]; })
-                .attr('r', function(d) { return planetaryNebulaMagnitudeScale(d.properties.magnitude)/2; });
+                .attr('r', function(d) { return planetaryNebulaMagnitudeScale(d.properties.magnitude)/2; })
+                .attr('style', 'fill: rgb(128, 204, 40); stroke-width: 0.32; stroke: rgb(35, 31, 32);');
         planetaryNebulaElms.append('path')
                 .attr('d', function(d) {
                     var coords = [
@@ -644,7 +670,8 @@ function ObservationChart(selection, options) {
                              coords[1]]
                              ]);
                     return line;
-                });
+                })
+                .attr('style', 'stroke-width: 0.32;  stroke: rgb(35, 31, 32);');
         planetaryNebulaElms.append('path')
                 .attr('d', function(d) {
                     var coords = [
@@ -659,10 +686,12 @@ function ObservationChart(selection, options) {
                              coords[1]+planetaryNebulaMagnitudeScale(
                                  d.properties.magnitude)]
                              ]);
-                });
+                })
+                .attr('style', 'stroke-width: 0.32;  stroke: rgb(35, 31, 32);');
         var planetaryNebulaLabels = base.drawLabelsForObjects(planetaryNebulas, 'planetarynebula-label', 
                 function(d) { return base.path.centroid(d)[0]; },
-                function(d) { return base.path.centroid(d)[1] - planetaryNebulaMagnitudeScale(d.properties.magnitude) * 2; });
+                function(d) { return base.path.centroid(d)[1] - planetaryNebulaMagnitudeScale(d.properties.magnitude) * 2; },
+                'font-size: 75%; font-family: "Trebuchet MS", Helvetica, sans-serif; font-style: italic; text-transform: uppercase; fill: rgba(35, 31, 32, 0.75);');
         if (base.options.planetarynebulas.labelhover) {
             planetaryNebulaLabels.style('visibility', 'hidden');
             planetaryNebulaElms
@@ -697,12 +726,15 @@ function ObservationChart(selection, options) {
             .attr('x', function(d) { return base.projection(d.geometry.coordinates)[0]; })
             .attr('y', function(d) { return base.projection(d.geometry.coordinates)[1]; })
             .attr('height', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); })
-            .attr('width', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); });
+            .attr('width', function(d) { return brightNebulaMagnitudeScale(d.properties.magnitude); })
+            .attr('style', 'fill: rgb(128, 204, 40); stroke-width: 0.32; stroke: rgb(35, 31, 32);');
+        
 
 
         var brightNebulaLabels = base.drawLabelsForObjects(brightNebulas, 'brightnebula-label', 
                 function(d) { return base.path.centroid(d)[0] + brightNebulaMagnitudeScale(d.properties.magnitude) / 2; },
-                function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) / 2; });
+                function(d) { return base.path.centroid(d)[1] - brightNebulaMagnitudeScale(d.properties.magnitude) / 2; },
+                'font-size: 75%; font-family: "Trebuchet MS", Helvetica, sans-serif; font-style: italic; text-transform: uppercase; fill: rgba(35, 31, 32, 0.75);');
 
         if (base.options.brightnebulas.labelhover) {
             brightNebulaLabels.style('visibility', 'hidden');
