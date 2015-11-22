@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 Will Barton. 
+ * Copyright 2010-2015 Will Barton. 
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without 
@@ -24,8 +24,6 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * This is loosely based on this Gist: https://gist.github.com/pnavarrc/9730300
  */ 
 
 var PI_OVER_180 = Math.PI/180;
