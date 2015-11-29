@@ -96,8 +96,7 @@ function ObservationChart(selection, options) {
         base.options = base.utils.extend({}, base.defaultOptions, base.options, options);
 
         // Set up the chart's date/time
-        // base.datetime = base.options.date;
-        base.datetime = new Date();
+        base.datetime = base.options.date;
 
         // Set the SVG width/height
         base.width = base.utils.width();
