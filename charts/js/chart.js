@@ -200,7 +200,7 @@ function ObservationChart(selection, options) {
                 if (!base.options.zoom.zoomable)
                     return;
 
-                var transform_attr = "translate(" + (d3.event.translate[0] + base.margin.left) + "," + (d3.event.translate[1] + base.margin.top) + ")scale(" + d3.event.scale + ")";
+                var transform_attr = "translate(" + (d3.event.translate[0] + base.margin.left) + "," + (d3.event.translate[1] + base.margin.top) + ")scale(" + d3.event.scale / base.options.scale + ")";
 
                 base.lines_group.attr("transform", transform_attr);
                 base.chart_group.attr("transform", transform_attr);
