@@ -30,8 +30,84 @@ var PI_OVER_180 = Math.PI/180;
 var TWO_PI = Math.PI * 2;
 var TWELVE_OVER_PI = 12/Math.PI;
 var ONEEIGHTY_OVER_PI = 180/Math.PI;
+var EPS = 1.0e-12;
 
-
+// Constants for position calculations
+var PLANETS = {
+    sun: {
+        N: 0.0,
+        i: 0.0,
+        w: 282.9404 + 4.70935e-5,
+        a: 1.000000,
+        e: 0.016709 - 1.151e-9,
+        M: 356.0470 + 0.9856002585
+    },
+    mercury: {
+        N:  48.3313 + 3.24587e-5,
+        i: 7.0047 + 5.00e-8,
+        w:  29.1241 + 1.01444e-5,
+        a: 0.387098,
+        e: 0.205635 + 5.59e-10,
+        M: 168.6562 + 4.0923344368
+    },
+    venus: {
+        N:  76.6799 + 2.46590e-5,
+        i: 3.3946 + 2.75e-8,
+        w:  54.8910 + 1.38374e-5,
+        a: 0.723330,
+        e: 0.006773 - 1.302e-9,
+        M:  48.0052 + 1.6021302244,
+    },
+    moon: {
+        N: 125.1228 - 0.0529538083,
+        i: 5.1454,
+        w: 318.0634 + 0.1643573223,
+        a: 60.2666, // (Earth radii)
+        e: 0.054900,
+        M: 115.3654 + 13.0649929509,
+    },
+    mars: {
+        N:  49.5574 + 2.11081e-5,
+        i: 1.8497 - 1.78e-8,
+        w: 286.5016 + 2.92961e-5,
+        a: 1.523688,
+        e: 0.093405 + 2.516e-9,
+        M:  18.6021 + 0.5240207766
+    }, 
+    jupiter: {
+        N: 100.4542 + 2.76854e-5,
+        i: 1.3030 - 1.557e-7,
+        w: 273.8777 + 1.64505e-5,
+        a: 5.20256,
+        e: 0.048498 + 4.469e-9,
+        M:  19.8950 + 0.0830853001
+    }, 
+    saturn: {
+        N: 113.6634 + 2.38980e-5,
+        i: 2.4886 - 1.081e-7,
+        w: 339.3939 + 2.97661e-5,
+        a: 9.55475,
+        e: 0.055546 - 9.499e-9,
+        M: 316.9670 + 0.0334442282
+    },
+    uranus: {
+        N:  74.0005 + 1.3978e-5,
+        i: 0.7733 + 1.9e-8,
+        w:  96.6612 + 3.0565e-5,
+        a: 19.18171 - 1.55e-8,
+        e: 0.047318 + 7.45e-9,
+        M: 142.5905 + 0.011725806
+    },
+    neptune: {
+        N: 131.7806 + 3.0173e-5,
+        i: 1.7700 - 2.55e-7,
+        w: 272.8461 - 6.027e-6,
+        a: 30.05826 + 3.313e-8,
+        e: 0.008606 + 2.15e-9,
+        M: 260.2471 + 0.005995147
+    }
+}
+ 
 
 function ObservationChart(selection, options) {
     // To avoid scope issues, use 'base' instead of 'this'
@@ -193,6 +269,7 @@ function ObservationChart(selection, options) {
 
     // Draw labels for the given objects with the given css class
     // and with the given functions for calculating dx and dy.
+    // base.drawLabelsForObjects = function(objects, cssClass, x, y) {
     base.drawLabelsForObjects = function(objects, cssClass, x, y) {
         var center_projected = base.path.centroid(base.utils.zenithFeature());
 
@@ -256,10 +333,6 @@ function ObservationChart(selection, options) {
                             [coords[0],coords[1]-base.options.zenith.size],
                             [coords[0],coords[1]+base.options.zenith.size]]);
                 });
-        
-        // base.drawLabelsForObjects(feature, 'zenith-label', 
-        //         function(d) { return base.path.centroid(d)[0]; },
-        //         function(d) { return base.path.centroid(d)[1] + 15; });
     };
 
     base.drawEcliptic = function() {
@@ -296,10 +369,6 @@ function ObservationChart(selection, options) {
             .enter().append('path')
             .attr('class', 'ecliptic')
             .attr('d', base.path);
-        // base.drawLabelsForObjects(ecliptic_feature, 'ecliptic-label', 
-        //         function(d) { return base.path.centroid(d)[0]; },
-        //         function(d) { return base.path.centroid(d)[1]; });
-
     };
 
     // Draw labels on the map for North, South, East, and West, and
@@ -363,6 +432,7 @@ function ObservationChart(selection, options) {
                 .attr('class', 'star')
                 .attr('id', 'sun')
                 .attr('d', base.path);
+            
             base.drawLabelsForObjects([sunFeature], 'sun-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - 30; });
@@ -377,6 +447,7 @@ function ObservationChart(selection, options) {
                 .attr('class', 'planetary')
                 .attr('id', 'moon')
                 .attr('d', base.path);
+
             base.drawLabelsForObjects([moonFeature], 'moon-label', 
                     function(d) { return base.path.centroid(d)[0]; },
                     function(d) { return base.path.centroid(d)[1] - 12; });
@@ -936,8 +1007,8 @@ function ObservationChart(selection, options) {
     base.utils.moon = function(date) {
         if(!date) date = base.datetime;
 
-        var JD = base.utils.julianDay(date);
         var sun = base.utils.sun(date);
+
         var lo = 91.929336;
         var Po = 130.143076;
         var No = 291.682547;
@@ -997,6 +1068,48 @@ function ObservationChart(selection, options) {
         };
         return moon_feature;
     }; 
+
+    // http://www.stjarnhimlen.se/comp/ppcomp.html
+    base.utils.solar = function(planet, date, lon) {
+
+        var JD = base.utils.julianDay(date);
+        var p = PLANETS[planet]
+
+        // Orbital elements
+        // N = longitude of the ascending node
+        var N = p.N * JD;
+        // i = inclination to the ecliptic (plane of the Earth's orbit)
+        var i = p.i;
+        // w = argument of perihelion
+        var w = p.w * JD;
+        // a = semi-major axis, or mean distance from Sun
+        var a = p.a * JD; // only for Neptune and Uranus ???
+        // e = eccentricity (0=circle, 0-1=ellipse, 1=parabola)
+        var e = p.e * JD;
+        // M = mean anomaly (0 at perihelion; increases uniformly with time)
+        var M = p.M * JD;
+
+        // eccentric anomaly
+        var E0 = M + e * ONEEIGHTY_OVER_PI * Math.sin(M * PI_OVER_180) * (1 + e * Math.cos(M * PI_OVER_180));
+        var E;
+        do {
+            E = E0 - (E0 - e * ONEEIGHTY_OVER_PI * Math.sin(E0 * PI_OVER_180) - M) / (1 - e * Math.cos(E0 * PI_OVER_180));
+            E0 = E;
+        } while (Math.abs(E0 - E) > 0.0005);
+
+        // true anomaly
+        var v = 2 * Math.atan(Math.sqrt((1 + e) / (1 - e)) * Math.tan(0.5 * E * PI_OVER_180));
+
+        // Distance
+        var r = a * (1 - e * e) / (1 + e * Math.cos(v * PI_OVER_180));
+
+        // Heliocentric coordinates 
+        var xh = r * (Math.cos(N * PI_OVER_180) * Math.cos(v + w * PI_OVER_180) - Math.sin(N * PI_OVER_180) * Math.sin(v + w * PI_OVER_180) * Math.cos(i * PI_OVER_180));
+        var yh = r * (Math.sin(N * PI_OVER_180) * Math.cos(v + w * PI_OVER_180) + Math.cos(N * PI_OVER_180) * Math.sin(v + w * PI_OVER_180) * Math.cos(i * PI_OVER_180));
+        var zh = r * (Math.sin(v + w * PI_OVER_180) * Math.sin(i * PI_OVER_180));
+
+
+    }
 
     base.utils.zenith = function() {
         if (!base.options.center.ra && !base.options.center.dec) {
