@@ -131,7 +131,7 @@ def main():
     parser.add_argument('--constellations', type=str, 
             help="specifies the constellations file path")
 
-    parser.add_argument('--specifically', type=str, default='',
+    parser.add_argument('--specifically', type=str, default='.*',
             help="a regular expression that matches specific object ids or aliases to include")
 
     parser.add_argument('--indent', type=int,
@@ -151,7 +151,6 @@ def main():
 
     objects = []
 
-    print(args.specifically)
     specifically = re.compile(args.specifically)
 
     if args.hyg:
@@ -165,16 +164,10 @@ def main():
         ngc_catalog = NGCCatalog(open(args.ngc))
         for o in ngc_catalog.values():
             if (o.magnitude <= args.magnitude) and \
-                specifically.search(''.join(o.aliases)):
+                    any([specifically.search(a) for a in o.aliases]):
                 print("APPENDING", o.aliases)
                 objects.append(o)
 
-        # objects.extend([o for o in ngc_catalog.values() 
-        #    if (o.magnitude <= args.magnitude) and
-        #        (specifically.search(o.id) or
-        #        specifically.search(''.join(o.aliases)))])
-
-        
     if args.constellations:
         const_catalog = ConstellationCatalog(open(args.constellations))
         objects.extend([o for o in const_catalog.values() 
@@ -194,6 +187,8 @@ def main():
         json_encoder.args = args
         json_string = json_encoder.encode(objects)
 
+
+    print(len(objects), "objects")
     
     if args.out:
         outfile = open(args.out, 'w')
