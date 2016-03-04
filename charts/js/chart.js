@@ -172,7 +172,7 @@ function ObservationChart(selection, options) {
         base.options = base.utils.extend({}, base.defaultOptions, base.options, options);
 
         // Set up the chart's date/time
-        base.datetime = base.options.date;
+        base.datetime = base.options.datetime;
 
         // Set the SVG width/height
         base.width = base.utils.width();
@@ -924,7 +924,7 @@ function ObservationChart(selection, options) {
         
     // Julian Day
     base.utils.julianDay = function(date) {
-        if(!date) date = base.options.datetime;
+        if(!date) date = base.datetime;
         return ( date.getTime() / 86400000.0 ) + 2440587.5;
     };
 
