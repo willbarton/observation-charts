@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <title>Charts - Observation</title>
+
+    <link rel="stylesheet" type="text/css" href="css/normalize.css">
+    <link rel="stylesheet" type="text/css" href="css/skeleton.css">
+    <link rel="stylesheet" type="text/css" href="css/chart-base.css">
+    <link rel="stylesheet" type="text/css" href="css/chartsapp.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <h1>Charts</h1>
+      </div>
+      <div class="row">
+        <div id="generated-chart"></div>
+      </div>
+
+      <div class="row">
+        <form id="settings">
+          <div class="three columns">
+            <label for="datetime">Date and Time</label>
+            <input class="u-full-width" type="text" placeholder="Month DD, Year, HH:MM pm" id="datetime">
+          </div>
+          <div class="two columns">
+            <label for="longitude">Longitude</label>
+            <input class="u-full-width" type="text" placeholder="" id="longitude">
+          </div>
+          <div class="two columns">
+            <label for="latitude">Latitude</label>
+            <input class="u-full-width" type="text" placeholder="" id="latitude">
+          </div>
+          <div class="three columns">
+            <label for="object-types">Deep Sky Objects</label>
+              <input name="object-types" id="bright-objects" type="radio" value="bright"> <span class="label-body">Bright</span>
+              &nbsp;
+              <input name="object-types" id="messier-objects" type="radio" value="messier"> <span class="label-body">Messier</span> 
+          </div>
+          <div class="two columns">
+            <label for="zoomable">Zoomable</label>
+              <input id="zoomable" type="checkbox"> <span class="label-body">Zoomable</span> 
+          </div>
+        </form>
+      </div>
+        
+    </div>
+
+    <script type="text/javascript" src="js/d3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/chart.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="js/jquery.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/moment.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/chartsapp.js"></script>
+  </body>
+</html>
