@@ -3,12 +3,6 @@ Observation-Charts
 
 Generate SVG star charts. 
 
-See http://gulielmus.github.io/observation-charts/ for more information
-and examples.
-
-See http://gulielmus.github.io/observation-charts/tonight for a
-realistically useful "Tonight's Sky" using Observation Charts.
-
 Goal: Create dynamic charts that resemble the IAU Constellation
 charts. This is a disjointed collection of stuff at the moment that is
 slowly coalescing into an orderly pairing of a Python package that
@@ -24,7 +18,7 @@ Currently there are two interesting components:
    utility to make reading and exporting from those databases to a
    custom JSON format and GeoJSON relatively straight-forward. This
    package is intended to be used to format data for...
-2. JavaScript package `observation-chart`. This package includes  which draws an SVG star chart based on a given
+2. JavaScript which draws an SVG star chart based on a given
    configuration (either a particular region of the sky or the whole sky for 
    a given location and time). See [`charts/index.html`](chart/index.html) 
    for more specific information.
