@@ -287,7 +287,6 @@ class NGCObject(CelestialObject):
             self.add_alias(*reversed(pair))
 
 
-
 class TestNGCObject(unittest.TestCase):
     def setUp(self):
         self.ngc_object_dict = {

@@ -33,8 +33,6 @@ import re
 import unittest
 from collections import namedtuple
 
-from PIL import Image, ImageDraw, ImageFont
-
 ### Named Tuples
 
 # Size is given major diameter x minor diameter in arc minutes.
