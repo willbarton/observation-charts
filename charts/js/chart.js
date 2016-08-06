@@ -120,7 +120,7 @@ function ObservationChart(selection, options) {
     base.rotate = {x: 0, y: 90};
 
     // Store the basic margins
-    base.margin = {top: 20, right: 20, bottom: 20, left: 20};
+    base.margin = {top: 0, right: 0, bottom: 0, left: 0};
 
     // Initialization
     base.init = function() {
@@ -200,7 +200,7 @@ function ObservationChart(selection, options) {
                 if (!base.options.zoom.zoomable)
                     return;
 
-                var transform_attr = "translate(" + (d3.event.translate[0] + base.margin.left) + "," + (d3.event.translate[1] + base.margin.top) + ")scale(" + d3.event.scale / base.options.scale + ")";
+                var transform_attr = "translate(" + (d3.event.translate[0] + base.margin.left) + "," + (d3.event.translate[1] + base.margin.top) + ")scale(" + d3.event.scale/base.options.scale + ")";
 
                 base.lines_group.attr("transform", transform_attr);
                 base.chart_group.attr("transform", transform_attr);
@@ -492,7 +492,12 @@ function ObservationChart(selection, options) {
         // -----
         // Compute the radius for the point features
         base.path.pointRadius(function(d) {
-            return rScale(d.properties.magnitude);
+            try {
+                return rScale(d.properties.magnitude);
+            } catch (e) {
+                // Why is this happening?
+                console.log(e);
+            }
         });
         base.star_group.selectAll('path.star')
             .data(stars.filter(function(d) { return base.path(d) != undefined; }))
